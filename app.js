@@ -523,38 +523,81 @@ function initAccordions() {
 
 // ── AI Insight (Anthropic API, optional) ─────────────────────
 
+// Two modes:
+//   1. Server-side key (Netlify Function) — no key prompt shown, just works.
+//      Detected by probing /.netlify/functions/ai-insight at startup.
+//   2. User's own key (localStorage) — user enters it in Settings.
+let AI_MODE = 'key'; // 'server' | 'key'
+
+async function detectAiMode() {
+  try {
+    const res = await fetch('/.netlify/functions/ai-insight', {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ probe: true }),
+      signal: AbortSignal.timeout(3000)
+    });
+    // A 400 (bad input) means the function exists — key is configured server-side
+    if (res.status === 400 || res.status === 200) {
+      AI_MODE = 'server';
+    }
+  } catch {
+    AI_MODE = 'key'; // not on Netlify, or function not deployed
+  }
+}
+
 function getApiKey() {
   return localStorage.getItem('gv_anthropic_key') || '';
 }
 
 function refreshAiSection(verseData) {
-  const hasKey = !!getApiKey();
+  const hasKey = AI_MODE === 'server' || !!getApiKey();
   document.getElementById('aiSetupPrompt').classList.toggle('hidden', hasKey);
   document.getElementById('aiInsightContent').classList.toggle('hidden', !hasKey);
 
   if (hasKey) {
-    // Clear previous AI text when verse changes
     document.getElementById('aiText').textContent = '';
     document.getElementById('aiLoading').classList.add('hidden');
   }
 
-  // Keep a reference so the refresh button works
   document.getElementById('aiRefresh').onclick = () => fetchAiInsight(verseData);
 }
 
 async function fetchAiInsight(verseData) {
-  const key = getApiKey();
-  if (!key) return;
-
-  const loadingEl = document.getElementById('aiLoading');
-  const textEl    = document.getElementById('aiText');
+  const loadingEl  = document.getElementById('aiLoading');
+  const textEl     = document.getElementById('aiText');
   const refreshBtn = document.getElementById('aiRefresh');
 
   loadingEl.classList.remove('hidden');
   textEl.textContent = '';
   refreshBtn.disabled = true;
 
-  const prompt = `You are a wise and compassionate teacher of the Bhagavad Gita.
+  try {
+    let insight = '';
+
+    if (AI_MODE === 'server') {
+      // ── Mode 1: Netlify Function proxy (key stored server-side) ──
+      const res = await fetch('/.netlify/functions/ai-insight', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({
+          chapter:        verseData.chapter,
+          verse:          verseData.verse,
+          slok:           verseData.slok,
+          transliteration: verseData.transliteration,
+          translation:    verseData.translation
+        })
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+      insight = data.insight || '';
+
+    } else {
+      // ── Mode 2: User's own key, direct browser call ──
+      const key = getApiKey();
+      if (!key) { textEl.textContent = 'Add your Anthropic API key in Settings.'; return; }
+
+      const prompt = `You are a wise and compassionate teacher of the Bhagavad Gita.
 
 Here is a shloka from Chapter ${verseData.chapter}, Verse ${verseData.verse}:
 
@@ -564,29 +607,28 @@ Standard translation: ${verseData.translation}
 
 Please give a brief (150–200 word), warm, and practical insight about this verse — connecting its wisdom to everyday modern life. Write in plain paragraphs, no bullet points or headers. Speak directly to the reader.`;
 
-  try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method: 'POST',
-      headers: {
-        'x-api-key':         key,
-        'anthropic-version': '2023-06-01',
-        'content-type':      'application/json',
-        'anthropic-dangerous-direct-browser-calls': 'true'
-      },
-      body: JSON.stringify({
-        model:      'claude-haiku-4-5-20251001',
-        max_tokens: 300,
-        messages:   [{ role: 'user', content: prompt }]
-      })
-    });
-
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.error?.message || `HTTP ${res.status}`);
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'x-api-key':         key,
+          'anthropic-version': '2023-06-01',
+          'content-type':      'application/json',
+          'anthropic-dangerous-direct-browser-calls': 'true'
+        },
+        body: JSON.stringify({
+          model:      'claude-haiku-4-5-20251001',
+          max_tokens: 300,
+          messages:   [{ role: 'user', content: prompt }]
+        })
+      });
+      if (!res.ok) {
+        const err = await res.json().catch(() => ({}));
+        throw new Error(err.error?.message || `HTTP ${res.status}`);
+      }
+      const data = await res.json();
+      insight = data.content?.[0]?.text || '';
     }
 
-    const data    = await res.json();
-    const insight = data.content?.[0]?.text || '';
     textEl.textContent = insight;
   } catch (err) {
     textEl.textContent = `Couldn't get insight: ${err.message}`;
@@ -603,6 +645,10 @@ function openSettings() {
   document.getElementById('settingsDrawer').classList.remove('hidden');
   document.getElementById('drawerOverlay').removeAttribute('aria-hidden');
   document.getElementById('settingsDrawer').removeAttribute('aria-hidden');
+
+  // Hide the API key section if the server already has a key configured
+  const keyGroup = document.getElementById('apiKeyInput').closest('.setting-group');
+  if (keyGroup) keyGroup.style.display = AI_MODE === 'server' ? 'none' : '';
 
   // Populate API key field (masked)
   const key = getApiKey();
@@ -689,8 +735,8 @@ function init() {
     navigator.serviceWorker.register('sw.js').catch(() => { /* non-fatal */ });
   }
 
-  // Load today
-  navigateTo(0);
+  // Detect AI mode (server key vs. user key) then load today
+  detectAiMode().finally(() => navigateTo(0));
 }
 
 document.addEventListener('DOMContentLoaded', init);
