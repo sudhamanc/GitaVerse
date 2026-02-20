@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta name="theme-color" content="#1a0500">
+  <meta name="description" content="Daily wisdom from the Bhagavad Gita — one shloka at a time, cycling through all 700 verses.">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="GitaVerse">
+
+  <!-- Open Graph -->
+  <meta property="og:title" content="GitaVerse — Daily Bhagavad Gita">
+  <meta property="og:description" content="One shloka a day from the Bhagavad Gita, cycling through all 700 verses.">
+  <meta property="og:type" content="website">
+
+  <title>GitaVerse — Daily Bhagavad Gita</title>
+
+  <link rel="manifest" href="manifest.json">
+  <link rel="icon" href="icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icon-192.png">
+
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+Devanagari:wght@400;500;700&family=Crimson+Text:ital,wght@0,400;0,600;1,400;1,600&family=Inter:wght@300;400;500;600&display=swap" rel="stylesheet">
+
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <div class="app" id="app">
+
+    <!-- Header -->
+    <header class="header">
+      <div class="header-inner">
+        <div class="logo">
+          <span class="om" aria-hidden="true">ॐ</span>
+          <div class="logo-text">
+            <span class="logo-title">GitaVerse</span>
+            <span class="logo-sub">Bhagavad Gita · Daily</span>
+          </div>
+        </div>
+        <button class="icon-btn" id="settingsBtn" aria-label="Settings" title="Settings">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3"/>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <!-- Day strip -->
+    <div class="day-strip">
+      <span id="dateDisplay"></span>
+      <span class="day-divider">·</span>
+      <span id="dayProgress"></span>
+    </div>
+
+    <!-- Main -->
+    <main class="main" id="main">
+
+      <!-- Loading -->
+      <div class="state-loading" id="stateLoading">
+        <div class="loader-om">ॐ</div>
+        <p>Loading today's shloka…</p>
+      </div>
+
+      <!-- Error -->
+      <div class="state-error hidden" id="stateError">
+        <div class="state-icon">🙏</div>
+        <h2>Couldn't load shloka</h2>
+        <p id="errorMsg">Please check your connection and try again.</p>
+        <button class="btn-primary" id="retryBtn">Try Again</button>
+      </div>
+
+      <!-- Shloka Card -->
+      <article class="shloka-card hidden" id="shlokaCard">
+
+        <!-- Verse badge -->
+        <div class="verse-badge">
+          <span class="chapter-label">Chapter <span id="chNum"></span> · Verse <span id="vNum"></span></span>
+          <span class="chapter-name" id="chName"></span>
+        </div>
+
+        <!-- Sanskrit -->
+        <section class="sanskrit-block" aria-label="Sanskrit shloka">
+          <div class="sanskrit-text" id="sanskritText" lang="sa"></div>
+          <div class="transliteration" id="translitText"></div>
+        </section>
+
+        <!-- Audio -->
+        <div class="audio-row" id="audioRow">
+          <button class="audio-btn" id="audioBtn" aria-label="Play Sanskrit recitation">
+            <span class="audio-play-icon" id="audioPlayIcon">
+              <!-- play triangle -->
+              <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><polygon points="4,2 14,8 4,14"/></svg>
+            </span>
+            <span id="audioBtnLabel">Listen in Sanskrit</span>
+          </button>
+          <audio id="audioEl" preload="none"></audio>
+        </div>
+
+        <!-- Divider -->
+        <div class="ornament">✦</div>
+
+        <!-- Translation -->
+        <section class="translation-block">
+          <h2 class="block-label">Translation</h2>
+          <p class="translation-text" id="translationText"></p>
+          <p class="translation-attribution" id="translationAttrib"></p>
+        </section>
+
+        <!-- Word Meanings (collapsible) -->
+        <div class="accordion" id="accordionWords">
+          <button class="accordion-trigger" aria-expanded="false" aria-controls="panelWords">
+            <span>Word by Word</span>
+            <span class="accordion-icon">+</span>
+          </button>
+          <div class="accordion-panel hidden" id="panelWords" role="region">
+            <p class="word-meanings" id="wordMeaningsText"></p>
+          </div>
+        </div>
+
+        <!-- Commentary (collapsible) -->
+        <div class="accordion hidden" id="accordionCommentary">
+          <button class="accordion-trigger" aria-expanded="false" aria-controls="panelCommentary">
+            <span>Commentary</span>
+            <span class="accordion-icon">+</span>
+          </button>
+          <div class="accordion-panel hidden" id="panelCommentary" role="region">
+            <p class="commentary-text" id="commentaryText"></p>
+          </div>
+        </div>
+
+        <!-- AI Insight (optional) -->
+        <div class="accordion ai-accordion" id="accordionAi">
+          <button class="accordion-trigger ai-trigger" aria-expanded="false" aria-controls="panelAi">
+            <span>✨ AI Insight</span>
+            <span class="accordion-icon">+</span>
+          </button>
+          <div class="accordion-panel hidden" id="panelAi" role="region">
+            <div id="aiSetupPrompt" class="ai-setup">
+              <p>Add your Anthropic API key in <strong>Settings</strong> to get personalized, modern insights about this shloka from Claude.</p>
+              <button class="btn-secondary btn-sm" id="aiOpenSettings">Open Settings</button>
+            </div>
+            <div id="aiInsightContent" class="hidden">
+              <div id="aiLoading" class="ai-loading hidden">
+                <div class="loader-om small">ॐ</div>
+                <span>Contemplating…</span>
+              </div>
+              <div id="aiText" class="ai-text"></div>
+              <button class="btn-secondary btn-sm" id="aiRefresh">↺ New Insight</button>
+            </div>
+          </div>
+        </div>
+
+      </article>
+    </main>
+
+    <!-- Navigation -->
+    <nav class="nav-bar" id="navBar" aria-label="Verse navigation">
+      <button class="nav-btn" id="prevBtn" aria-label="Previous day's verse">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
+        <span>Prev</span>
+      </button>
+      <button class="nav-btn nav-today" id="todayBtn" aria-label="Go to today's verse">
+        <span class="today-dot" id="todayDot"></span>
+        <span>Today</span>
+      </button>
+      <button class="nav-btn" id="nextBtn" aria-label="Next day's verse">
+        <span>Next</span>
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+    </nav>
+
+  </div><!-- /.app -->
+
+  <!-- Settings Drawer -->
+  <div class="drawer-overlay hidden" id="drawerOverlay" aria-hidden="true"></div>
+  <aside class="settings-drawer hidden" id="settingsDrawer" role="dialog" aria-label="Settings" aria-modal="true">
+    <div class="drawer-header">
+      <h2>Settings</h2>
+      <button class="icon-btn" id="closeSettings" aria-label="Close settings">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div class="drawer-body">
+
+      <div class="setting-group">
+        <label class="setting-label" for="apiKeyInput">Anthropic API Key</label>
+        <p class="setting-desc">
+          Powers the ✨ AI Insight feature — Claude gives you a personalized,
+          conversational take on each shloka. Your key is stored locally on this device only.
+        </p>
+        <input type="password" id="apiKeyInput" class="text-input" placeholder="sk-ant-api03-…" autocomplete="off" spellcheck="false">
+        <div class="btn-row">
+          <button class="btn-primary btn-sm" id="saveApiKey">Save Key</button>
+          <button class="btn-ghost btn-sm" id="clearApiKey">Clear</button>
+        </div>
+        <p class="api-key-status" id="apiKeyStatus"></p>
+      </div>
+
+      <div class="setting-group">
+        <label class="setting-label">About GitaVerse</label>
+        <p class="setting-desc">
+          Shows one shloka per day from all 700 verses of the Bhagavad Gita in a
+          deterministic sequence — no repeats for 700 days (~2 years), then it cycles.
+          The order is the same for everyone, no account or database needed.
+        </p>
+        <p class="setting-desc">
+          <strong>Data:</strong> Translations by Swami Sivananda via the
+          <a href="https://vedicscriptures.github.io" target="_blank" rel="noopener" class="link">Vedic Scriptures API</a>.
+          Sanskrit audio from <a href="https://www.gitasupersite.iitk.ac.in" target="_blank" rel="noopener" class="link">IIT Kanpur Gita Supersite</a>.
+        </p>
+      </div>
+
+      <div class="setting-group">
+        <label class="setting-label">Cache</label>
+        <p class="setting-desc">Loaded shlokas are cached locally for offline use.</p>
+        <button class="btn-ghost btn-sm" id="clearCache">Clear Cache</button>
+        <span class="setting-desc" id="cacheInfo"></span>
+      </div>
+
+    </div>
+  </aside>
+
+  <script src="app.js"></script>
+</body>
+</html>

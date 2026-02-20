@@ -1,0 +1,42 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+  <!-- Background -->
+  <rect width="512" height="512" rx="114" fill="#1a0500"/>
+
+  <!-- Subtle radial glow -->
+  <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+    <stop offset="0%"   stop-color="#f4a100" stop-opacity="0.18"/>
+    <stop offset="100%" stop-color="#1a0500" stop-opacity="0"/>
+  </radialGradient>
+  <rect width="512" height="512" rx="114" fill="url(#glow)"/>
+
+  <!-- Lotus petals (decorative ring) -->
+  <g opacity="0.35" fill="none" stroke="#f4a100" stroke-width="1.5">
+    <ellipse cx="256" cy="160" rx="18" ry="32" transform="rotate(0 256 256)"/>
+    <ellipse cx="256" cy="160" rx="18" ry="32" transform="rotate(45 256 256)"/>
+    <ellipse cx="256" cy="160" rx="18" ry="32" transform="rotate(90 256 256)"/>
+    <ellipse cx="256" cy="160" rx="18" ry="32" transform="rotate(135 256 256)"/>
+    <ellipse cx="256" cy="160" rx="18" ry="32" transform="rotate(180 256 256)"/>
+    <ellipse cx="256" cy="160" rx="18" ry="32" transform="rotate(225 256 256)"/>
+    <ellipse cx="256" cy="160" rx="18" ry="32" transform="rotate(270 256 256)"/>
+    <ellipse cx="256" cy="160" rx="18" ry="32" transform="rotate(315 256 256)"/>
+  </g>
+
+  <!-- Om symbol (ॐ) — Devanagari -->
+  <text
+    x="256"
+    y="310"
+    font-family="'Noto Sans Devanagari', 'Segoe UI', serif"
+    font-size="240"
+    font-weight="700"
+    text-anchor="middle"
+    fill="#f4a100"
+    filter="url(#shadow)"
+  >ॐ</text>
+
+  <!-- Drop shadow filter -->
+  <defs>
+    <filter id="shadow" x="-10%" y="-10%" width="120%" height="120%">
+      <feDropShadow dx="0" dy="0" stdDeviation="12" flood-color="#f4a100" flood-opacity="0.4"/>
+    </filter>
+  </defs>
+</svg>

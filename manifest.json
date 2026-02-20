@@ -1,0 +1,49 @@
+{
+  "name": "GitaVerse — Daily Bhagavad Gita",
+  "short_name": "GitaVerse",
+  "description": "One shloka a day from the Bhagavad Gita. All 700 verses, no repeats for 700 days.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#110600",
+  "theme_color": "#1a0500",
+  "orientation": "portrait-primary",
+  "categories": ["lifestyle", "education", "books"],
+  "lang": "en",
+  "icons": [
+    {
+      "src": "icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "screenshot.png",
+      "sizes": "390x844",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Daily Shloka view"
+    }
+  ],
+  "shortcuts": [
+    {
+      "name": "Today's Shloka",
+      "short_name": "Today",
+      "description": "Open today's verse",
+      "url": "/"
+    }
+  ]
+}
