@@ -110,17 +110,6 @@
           <p class="translation-attribution" id="translationAttrib"></p>
         </section>
 
-        <!-- Word Meanings (collapsible) -->
-        <div class="accordion" id="accordionWords">
-          <button class="accordion-trigger" aria-expanded="false" aria-controls="panelWords">
-            <span>Word by Word</span>
-            <span class="accordion-icon">+</span>
-          </button>
-          <div class="accordion-panel hidden" id="panelWords" role="region">
-            <p class="word-meanings" id="wordMeaningsText"></p>
-          </div>
-        </div>
-
         <!-- Commentary (collapsible) -->
         <div class="accordion hidden" id="accordionCommentary">
           <button class="accordion-trigger" aria-expanded="false" aria-controls="panelCommentary">
@@ -132,46 +121,29 @@
           </div>
         </div>
 
-        <!-- AI Insight (optional) -->
-        <div class="accordion ai-accordion" id="accordionAi">
-          <button class="accordion-trigger ai-trigger" aria-expanded="false" aria-controls="panelAi">
-            <span>✨ AI Insight</span>
-            <span class="accordion-icon">+</span>
-          </button>
-          <div class="accordion-panel hidden" id="panelAi" role="region">
-            <div id="aiSetupPrompt" class="ai-setup">
-              <p>Add your Anthropic API key in <strong>Settings</strong> to get personalized, modern insights about this shloka from Claude.</p>
-              <button class="btn-secondary btn-sm" id="aiOpenSettings">Open Settings</button>
-            </div>
-            <div id="aiInsightContent" class="hidden">
-              <div id="aiLoading" class="ai-loading hidden">
-                <div class="loader-om small">ॐ</div>
-                <span>Contemplating…</span>
-              </div>
-              <div id="aiText" class="ai-text"></div>
-              <button class="btn-secondary btn-sm" id="aiRefresh">↺ New Insight</button>
-            </div>
+        <!-- AI Insight (always visible) -->
+        <section class="ai-section" id="aiSection">
+          <div class="ai-header">
+            <h2 class="block-label">✨ AI Insight</h2>
+            <button class="btn-secondary btn-sm" id="aiRefresh">↺ New Insight</button>
           </div>
-        </div>
+          <div id="aiSetupPrompt" class="ai-setup">
+            <p>Add your Anthropic API key in <strong>Settings</strong> to get personalized, modern insights about this shloka from Claude.</p>
+            <button class="btn-secondary btn-sm" id="aiOpenSettings">Open Settings</button>
+          </div>
+          <div id="aiInsightContent" class="hidden">
+            <div id="aiLoading" class="ai-loading hidden">
+              <div class="loader-om small">ॐ</div>
+              <span>Contemplating…</span>
+            </div>
+            <div id="aiText" class="ai-text"></div>
+          </div>
+        </section>
 
       </article>
     </main>
 
-    <!-- Navigation -->
-    <nav class="nav-bar" id="navBar" aria-label="Verse navigation">
-      <button class="nav-btn" id="prevBtn" aria-label="Previous day's verse">
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="15 18 9 12 15 6"/></svg>
-        <span>Prev</span>
-      </button>
-      <button class="nav-btn nav-today" id="todayBtn" aria-label="Go to today's verse">
-        <span class="today-dot" id="todayDot"></span>
-        <span>Today</span>
-      </button>
-      <button class="nav-btn" id="nextBtn" aria-label="Next day's verse">
-        <span>Next</span>
-        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="9 18 15 12 9 6"/></svg>
-      </button>
-    </nav>
+
 
   </div><!-- /.app -->
 
@@ -210,7 +182,7 @@
         <p class="setting-desc">
           <strong>Data:</strong> Translations by Swami Sivananda via the
           <a href="https://vedicscriptures.github.io" target="_blank" rel="noopener" class="link">Vedic Scriptures API</a>.
-          Sanskrit audio from <a href="https://www.gitasupersite.iitk.ac.in" target="_blank" rel="noopener" class="link">IIT Kanpur Gita Supersite</a>.
+          Sanskrit audio from <a href="https://gita-audio.jkyog.org" target="_blank" rel="noopener" class="link">gita-audio.jkyog.org</a>.
         </p>
       </div>
 
@@ -224,6 +196,24 @@
     </div>
   </aside>
 
+  <!-- Force-clear stale service workers (timeout-guarded, never blocks app) -->
+  <script>
+    window.__swReady = Promise.race([
+      (async function() {
+        try {
+          if ('serviceWorker' in navigator) {
+            const regs = await navigator.serviceWorker.getRegistrations();
+            for (const r of regs) { await r.unregister(); }
+            const keys = await caches.keys();
+            await Promise.all(keys.map(k => caches.delete(k)));
+            if (regs.length || keys.length)
+              console.log('[SW] Cleared', regs.length, 'workers,', keys.length, 'caches');
+          }
+        } catch(e) { console.warn('[SW] cleanup error:', e); }
+      })(),
+      new Promise(r => setTimeout(r, 2000))   // never block longer than 2 s
+    ]);
+  </script>
   <script src="app.js"></script>
 </body>
 </html>

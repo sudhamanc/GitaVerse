@@ -9,13 +9,18 @@
 // This function calls Anthropic and returns the result.
 
 export async function handler(event) {
+  console.log(`[ai-insight] ${event.httpMethod} request received`);
+
   if (event.httpMethod !== 'POST') {
     return { statusCode: 405, body: 'Method Not Allowed' };
   }
 
-  const apiKey = process.env.ANTHROPIC_API_KEY;
+  // Prefer server-side env key; fall back to user-supplied key from header
+  const apiKey = process.env.ANTHROPIC_API_KEY
+    || (event.headers['x-api-key'] ?? event.headers['X-Api-Key'] ?? '');
   if (!apiKey) {
-    return { statusCode: 503, body: JSON.stringify({ error: 'AI Insight not configured on this server.' }) };
+    console.warn('[ai-insight] No API key available');
+    return { statusCode: 503, body: JSON.stringify({ error: 'No API key. Set ANTHROPIC_API_KEY on the server or enter your key in Settings.' }) };
   }
 
   let body;
@@ -54,15 +59,20 @@ Please give a brief (150–200 word), warm, and practical insight about this ver
 
     const data = await res.json();
     if (!res.ok) {
+      console.error(`[ai-insight] Anthropic error ${res.status}:`, data.error?.message);
       return { statusCode: res.status, body: JSON.stringify({ error: data.error?.message || 'Anthropic error' }) };
     }
+
+    const insight = data.content?.[0]?.text || '';
+    console.log(`[ai-insight] Success — ${insight.length} chars for Ch.${body.chapter}:${body.verse}`);
 
     return {
       statusCode: 200,
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ insight: data.content?.[0]?.text || '' })
+      body: JSON.stringify({ insight })
     };
   } catch (err) {
+    console.error('[ai-insight] Proxy error:', err.message);
     return { statusCode: 502, body: JSON.stringify({ error: err.message }) };
   }
 }

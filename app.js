@@ -12,6 +12,24 @@
 
 'use strict';
 
+// ── Frontend Logger (console only, no user access) ───────────────
+
+function glog(level, ...args) {
+  if (level === 'error') console.error('[GV]', ...args);
+  else console.log('[GV]', ...args);
+}
+
+function withTimeout(promise, ms, label = 'Request timeout') {
+  let timeoutId;
+  const timeoutPromise = new Promise((_, reject) => {
+    timeoutId = setTimeout(() => reject(new Error(label)), ms);
+  });
+  return Promise.race([
+    promise.finally(() => clearTimeout(timeoutId)),
+    timeoutPromise
+  ]);
+}
+
 // ── Constants ─────────────────────────────────────────────────
 
 const EPOCH = new Date('2024-01-01T00:00:00'); // Day 0
@@ -187,7 +205,7 @@ function saveToCache(chapter, verse, data) {
  */
 async function fetchFromAPI(chapter, verse) {
   const url = `${API_PRIMARY}/${chapter}/${verse}/`;
-  const res  = await fetch(url, { signal: AbortSignal.timeout(8000) });
+  const res  = await withTimeout(fetch(url), 8000, 'Verse API timeout');
   if (!res.ok) throw new Error(`HTTP ${res.status}`);
   return res.json();
 }
@@ -200,16 +218,23 @@ async function fetchFromAPI(chapter, verse) {
 async function loadVerse(chapter, verse) {
   // 1. Cache hit
   const cached = loadFromCache(chapter, verse);
-  if (cached) return cached;
+  if (cached) {
+    glog('info', 'Verse loaded from cache');
+    return cached;
+  }
 
   // 2. Try API
   let raw;
   try {
+    glog('info', 'Fetching from API:', `${API_PRIMARY}/${chapter}/${verse}/`);
     raw = await fetchFromAPI(chapter, verse);
+    glog('info', 'API fetch successful');
   } catch (err) {
+    glog('error', 'API fetch failed:', err.message);
     // 3. Offline fallback for a handful of famous shlokas
     const fb = OFFLINE_FALLBACK[`${chapter}_${verse}`];
     if (fb) {
+      glog('info', 'Using offline fallback');
       raw = fb;
     } else {
       throw err; // propagate to caller
@@ -251,11 +276,11 @@ function normaliseVerseData(raw, chapter, verse) {
     }
   }
 
-  // Audio: IIT Kanpur Gita Supersite provides per-verse Sanskrit audio
-  // URL format (0-padded chapter, 0-padded verse)
-  const chPad = String(chapter).padStart(2, '0');
+  // Audio: current per-verse Sanskrit recitations are served from gita-audio.jkyog.org
+  // URL format: 3-digit chapter + '_' + 3-digit verse (e.g. 002_047.mp3)
+  const chPad = String(chapter).padStart(3, '0');
   const vPad  = String(verse).padStart(3, '0');
-  const audioUrl = `https://www.gitasupersite.iitk.ac.in/gita/audio/gBGShankara_${chPad}${vPad}.mp3`;
+  const audioUrl = `https://gita-audio.jkyog.org/audio/sanskrit/gita_audios/${chPad}_${vPad}.mp3`;
 
   return {
     chapter,
@@ -307,13 +332,14 @@ function setupAudio(verseData) {
     if (audioState === 'loading') {
       audioState = 'playing';
       setBtn('playing');
-      audioEl.play().catch(() => fallbackTTS(verseData));
+      audioEl.play().catch(() => {});
     }
   }, { once: true });
 
   audioEl.addEventListener('error', () => {
-    audioState = 'error';
-    setBtn('error');
+    audioState = 'idle';
+    setBtn('idle');
+    glog('error', 'Audio playback error for URL:', verseData.audioUrl);
   }, { once: true });
 
   audioEl.addEventListener('ended', () => {
@@ -349,35 +375,10 @@ function setupAudio(verseData) {
       audioEl.pause();
     } else if (audioState === 'paused') {
       audioEl.play().catch(() => {});
-    } else if (audioState === 'error') {
-      // TTS fallback
-      fallbackTTS(verseData);
     }
   };
 
   setBtn('idle');
-}
-
-/** Web Speech API fallback — reads the transliteration aloud. */
-function fallbackTTS(verseData) {
-  if (!window.speechSynthesis) return;
-  window.speechSynthesis.cancel();
-
-  const text = verseData.transliteration || verseData.slok || '';
-  if (!text) return;
-
-  const utter   = new SpeechSynthesisUtterance(text);
-  utter.rate     = 0.75;
-  utter.pitch    = 0.9;
-  utter.volume   = 1;
-
-  // Prefer an Indian-English voice if available, for closer Sanskrit pronunciation
-  const voices = window.speechSynthesis.getVoices();
-  const indVoice = voices.find(v => v.lang === 'hi-IN' || v.lang === 'sa-IN') ||
-                   voices.find(v => v.lang.startsWith('en-IN'));
-  if (indVoice) utter.voice = indVoice;
-
-  window.speechSynthesis.speak(utter);
 }
 
 // ── UI Rendering ──────────────────────────────────────────────
@@ -422,10 +423,6 @@ function renderVerse(verseRef, verseData) {
   document.getElementById('translationAttrib').textContent =
     verseData.attribution ? `— ${verseData.attribution}` : '';
 
-  // Word meanings accordion
-  const wm = verseData.wordMeanings;
-  document.getElementById('wordMeaningsText').textContent = wm || '(Not available)';
-
   // Commentary accordion
   const accCommentary = document.getElementById('accordionCommentary');
   if (verseData.commentary) {
@@ -450,22 +447,17 @@ function renderVerse(verseRef, verseData) {
 
 // ── Day Navigation ────────────────────────────────────────────
 
-let currentOffset = 0; // 0 = today
+let currentOffset = 0; // always 0 (today only)
 
 async function navigateTo(offset) {
-  currentOffset = offset;
-  const verseRef = getVerseForOffset(offset);
+  glog('info', 'navigateTo called, offset:', offset);
+  currentOffset = 0; // always today
+  const verseRef = getVerseForOffset(0);
+  glog('info', 'Today\'s verse: Chapter', verseRef.chapter, 'Verse', verseRef.verse, '(cycle', verseRef.cyclePosition, ')');
 
   // Day strip
-  const dateStr = offset === 0 ? `Today · ${formatDate(0)}`
-                : offset === -1 ? `Yesterday · ${formatDate(-1)}`
-                : offset === 1  ? `Tomorrow · ${formatDate(1)}`
-                : formatDate(offset);
-  document.getElementById('dateDisplay').textContent = dateStr;
+  document.getElementById('dateDisplay').textContent = `Today · ${formatDate(0)}`;
   document.getElementById('dayProgress').textContent = `Verse ${verseRef.cyclePosition} of 700`;
-
-  // Today button dot
-  document.getElementById('todayDot').classList.toggle('is-today', offset === 0);
 
   // Reset accordions
   resetAccordions();
@@ -473,9 +465,12 @@ async function navigateTo(offset) {
   showLoading();
 
   try {
+    glog('info', 'Loading verse data...');
     const data = await loadVerse(verseRef.chapter, verseRef.verse);
+    glog('info', 'Verse loaded successfully');
     renderVerse(verseRef, data);
   } catch (err) {
+    glog('error', 'Failed to load verse:', err.message);
     showError(`Could not load Chapter ${verseRef.chapter}, Verse ${verseRef.verse}. ` +
               `Check your connection or try again. (${err.message})`);
   }
@@ -523,26 +518,28 @@ function initAccordions() {
 
 // ── AI Insight (Anthropic API, optional) ─────────────────────
 
-// Two modes:
-//   1. Server-side key (Netlify Function) — no key prompt shown, just works.
-//      Detected by probing /.netlify/functions/ai-insight at startup.
-//   2. User's own key (localStorage) — user enters it in Settings.
-let AI_MODE = 'key'; // 'server' | 'key'
+// Always proxied through /.netlify/functions/ai-insight (works on
+// Netlify AND the local dev server).  The proxy uses a server-side
+// key when available, or the user's own key sent in x-api-key.
+let HAS_SERVER_KEY = false;   // true when the server has its own key
 
 async function detectAiMode() {
+  glog('info', 'Detecting AI mode...');
   try {
-    const res = await fetch('/.netlify/functions/ai-insight', {
+    const res = await withTimeout(fetch('/.netlify/functions/ai-insight', {
       method: 'POST',
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ probe: true }),
-      signal: AbortSignal.timeout(3000)
-    });
-    // A 400 (bad input) means the function exists — key is configured server-side
+    }), 3000, 'AI probe timeout');
+    glog('info', 'AI probe response:', res.status);
+    // 400 = function exists & server key is configured
+    // 503 = function exists but no server key (user key needed)
     if (res.status === 400 || res.status === 200) {
-      AI_MODE = 'server';
+      HAS_SERVER_KEY = true;
     }
-  } catch {
-    AI_MODE = 'key'; // not on Netlify, or function not deployed
+  } catch (err) {
+    glog('info', 'AI probe failed (expected locally):', err.message);
+    HAS_SERVER_KEY = false;
   }
 }
 
@@ -551,13 +548,14 @@ function getApiKey() {
 }
 
 function refreshAiSection(verseData) {
-  const hasKey = AI_MODE === 'server' || !!getApiKey();
+  const hasKey = HAS_SERVER_KEY || !!getApiKey();
   document.getElementById('aiSetupPrompt').classList.toggle('hidden', hasKey);
   document.getElementById('aiInsightContent').classList.toggle('hidden', !hasKey);
 
   if (hasKey) {
-    document.getElementById('aiText').textContent = '';
+    document.getElementById('aiText').textContent = 'Generating insight…';
     document.getElementById('aiLoading').classList.add('hidden');
+    fetchAiInsight(verseData);
   }
 
   document.getElementById('aiRefresh').onclick = () => fetchAiInsight(verseData);
@@ -573,61 +571,28 @@ async function fetchAiInsight(verseData) {
   refreshBtn.disabled = true;
 
   try {
-    let insight = '';
-
-    if (AI_MODE === 'server') {
-      // ── Mode 1: Netlify Function proxy (key stored server-side) ──
-      const res = await fetch('/.netlify/functions/ai-insight', {
-        method: 'POST',
-        headers: { 'content-type': 'application/json' },
-        body: JSON.stringify({
-          chapter:        verseData.chapter,
-          verse:          verseData.verse,
-          slok:           verseData.slok,
-          transliteration: verseData.transliteration,
-          translation:    verseData.translation
-        })
-      });
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
-      insight = data.insight || '';
-
-    } else {
-      // ── Mode 2: User's own key, direct browser call ──
+    // Build headers — include user's key if no server-side key
+    const headers = { 'content-type': 'application/json' };
+    if (!HAS_SERVER_KEY) {
       const key = getApiKey();
       if (!key) { textEl.textContent = 'Add your Anthropic API key in Settings.'; return; }
-
-      const prompt = `You are a wise and compassionate teacher of the Bhagavad Gita.
-
-Here is a shloka from Chapter ${verseData.chapter}, Verse ${verseData.verse}:
-
-Sanskrit: ${verseData.slok}
-Transliteration: ${verseData.transliteration}
-Standard translation: ${verseData.translation}
-
-Please give a brief (150–200 word), warm, and practical insight about this verse — connecting its wisdom to everyday modern life. Write in plain paragraphs, no bullet points or headers. Speak directly to the reader.`;
-
-      const res = await fetch('https://api.anthropic.com/v1/messages', {
-        method: 'POST',
-        headers: {
-          'x-api-key':         key,
-          'anthropic-version': '2023-06-01',
-          'content-type':      'application/json',
-          'anthropic-dangerous-direct-browser-calls': 'true'
-        },
-        body: JSON.stringify({
-          model:      'claude-haiku-4-5-20251001',
-          max_tokens: 300,
-          messages:   [{ role: 'user', content: prompt }]
-        })
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        throw new Error(err.error?.message || `HTTP ${res.status}`);
-      }
-      const data = await res.json();
-      insight = data.content?.[0]?.text || '';
+      headers['x-api-key'] = key;
     }
+
+    const res = await fetch('/.netlify/functions/ai-insight', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        chapter:         verseData.chapter,
+        verse:           verseData.verse,
+        slok:            verseData.slok,
+        transliteration: verseData.transliteration,
+        translation:     verseData.translation
+      })
+    });
+    const data = await res.json();
+    if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
+    const insight = data.insight || '';
 
     textEl.textContent = insight;
   } catch (err) {
@@ -648,7 +613,7 @@ function openSettings() {
 
   // Hide the API key section if the server already has a key configured
   const keyGroup = document.getElementById('apiKeyInput').closest('.setting-group');
-  if (keyGroup) keyGroup.style.display = AI_MODE === 'server' ? 'none' : '';
+  if (keyGroup) keyGroup.style.display = HAS_SERVER_KEY ? 'none' : '';
 
   // Populate API key field (masked)
   const key = getApiKey();
@@ -708,12 +673,7 @@ function clearCache() {
 // ── Bootstrap ──────────────────────────────────────────────────
 
 function init() {
-  // Navigation — use event delegation to avoid duplicate listener issues
-  document.getElementById('navBar').addEventListener('click', (e) => {
-    if (e.target.closest('#prevBtn'))  navigateTo(currentOffset - 1);
-    if (e.target.closest('#nextBtn'))  navigateTo(currentOffset + 1);
-    if (e.target.closest('#todayBtn')) navigateTo(0);
-  });
+  glog('info', '=== GitaVerse init ===');
 
   // Retry button (in error state)
   document.getElementById('retryBtn').addEventListener('click', () => navigateTo(currentOffset));
@@ -730,13 +690,21 @@ function init() {
   // Accordions
   initAccordions();
 
-  // Register service worker
-  if ('serviceWorker' in navigator) {
-    navigator.serviceWorker.register('sw.js').catch(() => { /* non-fatal */ });
-  }
+  // SW cleanup + fresh registration (fire-and-forget, never blocks verse load)
+  const swClean = window.__swReady || Promise.resolve();
+  swClean.then(() => {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').catch(() => { /* non-fatal */ });
+    }
+  }).catch(() => {});
 
-  // Detect AI mode (server key vs. user key) then load today
-  detectAiMode().finally(() => navigateTo(0));
+  // Load today's verse immediately — don't wait for SW cleanup
+  glog('info', 'Starting detectAiMode...');
+  detectAiMode().finally(() => {
+    glog('info', 'AI mode detected');
+  });
+  glog('info', 'Loading today\'s verse...');
+  navigateTo(0);
 }
 
 document.addEventListener('DOMContentLoaded', init);

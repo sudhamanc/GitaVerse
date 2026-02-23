@@ -7,7 +7,7 @@
    • Audio files → Network-only (too large to pre-cache)
    ============================================================ */
 
-const SHELL_CACHE   = 'gitaverse-shell-v1';
+const SHELL_CACHE   = 'gitaverse-shell-v4';
 const API_CACHE     = 'gitaverse-api-v1';
 
 const SHELL_ASSETS = [
@@ -65,9 +65,9 @@ self.addEventListener('fetch', event => {
     return;
   }
 
-  // App shell assets — cache-first
+  // App shell assets — network-first (so updates are picked up quickly)
   if (url.hostname === self.location.hostname) {
-    event.respondWith(cacheFirstWithNetwork(event.request, SHELL_CACHE));
+    event.respondWith(networkFirstWithCache(event.request, SHELL_CACHE));
     return;
   }
 });
