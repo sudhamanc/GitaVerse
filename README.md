@@ -7,9 +7,10 @@ A beautiful, no-backend daily Bhagavad Gita shloka app that works on any browser
 - **Today's shloka only** — one verse per day, cycles through all 700 verses deterministically (~2-year cycle)
 - **No database, no server** — pure math selects today's verse (deterministic shuffle by day-since-epoch)
 - **Offline-first PWA** — install on your phone from Chrome/Safari, works offline after first load
-- **Sanskrit** (Devanagari) + **transliteration** + **English translation** + word meanings
-- **Sanskrit audio recitation** — real Sanskrit pronunciation streamed from bhagavadgita.com (per-verse MP3s)
-- **AI Insight** (optional) — Claude gives a warm, modern interpretation of the verse connecting its wisdom to daily life
+- **Sanskrit** (Devanagari) + **transliteration** + **English translation**
+- **Sanskrit audio recitation** — real Sanskrit pronunciation streamed from gita-audio.jkyog.org (per-verse MP3s)
+- **AI Insight panel always visible** — Claude gives a warm, modern interpretation of the verse connecting its wisdom to daily life
+- **Simplified reading flow** — Word-by-Word removed and compact no-scroll layout on web/mobile
 - **Works everywhere** — same code runs locally and on Netlify with no changes
 
 ## How to Run Locally
@@ -31,7 +32,7 @@ Then open `http://localhost:8080` in your browser. On mobile, use Chrome → "Ad
 
 1. Open the app → click the **⚙ Settings** icon
 2. Paste your [Anthropic API key](https://console.anthropic.com) (`sk-ant-...`)
-3. Save → expand the **✨ AI Insight** section on today's verse
+3. Save → the **✨ AI Insight** panel is available on today's verse
 
 The key is stored in your browser's `localStorage` and sent to the local proxy server, which forwards requests to Anthropic's API. Your key never leaves your machine.
 
@@ -76,6 +77,54 @@ When a server key is configured, AI insights work automatically for all visitors
 
 Users can still enter their own Anthropic API key in the app's Settings. The key is sent via `x-api-key` header to the Netlify Function, which proxies the request to Anthropic. The key is only stored in the user's browser.
 
+## Architecture Flow (Frontend → Backend)
+
+The app uses direct fetches for public verse/audio data, and a backend proxy for AI insight:
+
+- **Verse & Audio** are fetched directly from public endpoints (no proxy needed)
+- **AI Insight (primary path):** frontend sends verse content only; Netlify Function injects `ANTHROPIC_API_KEY` server-side
+- **Service Worker caching:** network-first for app shell and verse API, cache-first for fonts
+- **Fallback path:** if server key is not configured, user can provide their own key in Settings, which is still sent to Netlify Function (never directly to Anthropic from browser)
+
+```mermaid
+sequenceDiagram
+        actor User
+        participant Browser as Frontend (app.js)
+        participant SW as Service Worker (sw.js)
+        participant VerseAPI as Vedic Scriptures API
+        participant AudioAPI as gita-audio.jkyog.org
+        participant Fn as Netlify Function\n/.netlify/functions/ai-insight
+        participant Anthropic as Anthropic API
+
+        rect rgb(35, 20, 0)
+            Browser->>VerseAPI: GET /slok/{chapter}/{verse}/
+            VerseAPI-->>Browser: Verse JSON
+            Browser->>AudioAPI: GET /audio/sanskrit/gita_audios/{ch}_{v}.mp3
+            AudioAPI-->>Browser: MP3 stream
+        end
+
+        rect rgb(0, 28, 45)
+            Browser->>Fn: POST verse payload (no API key)
+            Note over Fn: Reads ANTHROPIC_API_KEY\nfrom server env
+            Fn->>Anthropic: POST /v1/messages with server key
+            Anthropic-->>Fn: Insight response
+            Fn-->>Browser: { insight }
+        end
+
+        rect rgb(45, 25, 0)
+            Browser->>SW: Register sw.js
+            SW-->>Browser: Network-first shell + verse API, cache-first fonts
+        end
+
+        rect rgb(55, 20, 20)
+            Note over Browser,Fn: Fallback when server key missing
+            Browser->>Fn: POST with x-api-key (user-provided)
+            Fn->>Anthropic: Forwards via proxy
+            Anthropic-->>Fn: Insight response
+            Fn-->>Browser: { insight }
+        end
+```
+
 ## AI Insight — Cost Estimate
 
 The AI Insight feature uses **Claude Haiku** (`claude-haiku-4-5-20251001`), the most cost-efficient model:
@@ -117,9 +166,9 @@ Today's verse = DAILY_ORDER[ daysSince(2024-01-01) % 700 ]
 
 ## Data Sources
 
-- **Translations:** [Vedic Scriptures API](https://vedicscriptures.github.io) — Swami Sivananda and others (CC-licensed)
-- **Sanskrit audio:** [bhagavadgita.com](https://bhagavadgita.com) — per-verse Sanskrit recitation MP3s
-- **AI Insight:** [Anthropic Claude API](https://anthropic.com) (optional)
+- **Shloka text + transliteration + translation:** [Vedic Scriptures API](https://vedicscriptures.github.io) (`/slok/{chapter}/{verse}/`) — includes Sanskrit text and multiple translators (siva, gambir, tej, etc.)
+- **Sanskrit audio:** [gita-audio.jkyog.org](https://gita-audio.jkyog.org) (`/audio/sanskrit/gita_audios/{chapter}_{verse}.mp3`)
+- **AI insights:** [Anthropic Claude API](https://anthropic.com), accessed only through proxy endpoints (`/.netlify/functions/ai-insight` on Netlify, `server.py` locally)
 
 Fetched verses are cached in `localStorage` for offline use.
 
