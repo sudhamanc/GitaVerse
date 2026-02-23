@@ -454,6 +454,13 @@ a:hover { color: var(--gold-light); }
   margin-bottom: 6px;
 }
 
+#turnstileWidget {
+  min-height: 68px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
 .ai-text {
   font-family: var(--font-serif);
   font-size: 0.92rem;

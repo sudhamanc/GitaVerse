@@ -565,10 +565,12 @@ async function ensureTurnstileScript() {
 }
 
 async function ensureCaptchaToken() {
-  if (!CAPTCHA_REQUIRED || !HAS_SERVER_KEY) return true;
+  if (!CAPTCHA_REQUIRED) return true;
   if (TURNSTILE_TOKEN) return true;
 
   const wrap = document.getElementById('captchaWrap');
+  const content = document.getElementById('aiInsightContent');
+  content.classList.remove('hidden');
   wrap.classList.remove('hidden');
 
   if (!TURNSTILE_SITE_KEY) {
@@ -639,7 +641,9 @@ function refreshAiSection(verseData) {
   const hasKey = HAS_SERVER_KEY || !!getApiKey();
   document.getElementById('aiSetupPrompt').classList.toggle('hidden', hasKey);
   document.getElementById('aiInsightContent').classList.toggle('hidden', !hasKey);
-  document.getElementById('captchaWrap').classList.add('hidden');
+  if (!CAPTCHA_REQUIRED || TURNSTILE_TOKEN) {
+    document.getElementById('captchaWrap').classList.add('hidden');
+  }
 
   if (hasKey) {
     document.getElementById('aiText').textContent = 'Generating insight…';
