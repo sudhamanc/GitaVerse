@@ -87,25 +87,30 @@ The app uses direct fetches for public verse/audio data, and a backend proxy for
 - **Fallback path:** if server key is not configured, user can provide their own key in Settings, which is still sent to Netlify Function (never directly to Anthropic from browser)
 
 ```mermaid
-flowchart TD
-    U[User] --> B[Frontend app.js]
+sequenceDiagram
+    participant FE as Frontend (app.js)
+    participant VS as Vedic Scriptures API
+    participant AU as gita-audio.jkyog.org
+    participant NF as Netlify Function
+    participant AN as Anthropic API
+    participant SW as Service Worker
 
-    B -->|GET /slok/{chapter}/{verse}/| V[Vedic Scriptures API]
-    V -->|Verse JSON| B
+    FE->>VS: GET shloka data
+    VS-->>FE: Verse JSON
 
-    B -->|GET /audio/sanskrit/gita_audios/{ch}_{v}.mp3| A[gita-audio.jkyog.org]
-    A -->|MP3 stream| B
+    FE->>AU: GET Sanskrit audio mp3
+    AU-->>FE: Audio stream
 
-    B -->|POST verse payload \n(no key)| F[Netlify Function\n/.netlify/functions/ai-insight]
-    F -->|Read ANTHROPIC_API_KEY\nfrom env| F
-    F -->|POST /v1/messages| L[Anthropic API]
-    L -->|Insight response| F
-    F -->|JSON { insight }| B
+    FE->>NF: POST verse payload (no key)
+    Note over NF: Reads ANTHROPIC_API_KEY from env
+    NF->>AN: POST messages API
+    AN-->>NF: Insight response
+    NF-->>FE: Insight JSON
 
-    B -. optional fallback .->|POST + x-api-key from Settings| F
+    FE->>NF: Optional fallback with x-api-key
 
-    B --> SW[Service Worker sw.js]
-    SW -->|Network-first: app shell + verse API\nCache-first: fonts| B
+    FE->>SW: Register service worker
+    SW-->>FE: Cached responses when available
 ```
 
 ## AI Insight — Cost Estimate
