@@ -160,7 +160,7 @@ DAILY_ORDER[0..699]  — same sequence for every device, every time
 Today's verse = DAILY_ORDER[ daysSince(2024-01-01) % 700 ]
 ```
 
-- Same verse on the same calendar date for everyone, globally
+- Same verse for everyone worldwide on the same UTC day
 - No login, no account, no sync needed
 - After 700 days the cycle starts again
 

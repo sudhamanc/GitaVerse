@@ -147,18 +147,18 @@ const ALL_VERSES    = buildAllVerses();              // [{ chapter, verse }, …
 const DAILY_ORDER   = deterministicShuffle(ALL_VERSES, 20240101); // Fixed seed
 
 /**
- * Return how many full days have elapsed since EPOCH in local time.
- * Always yields the same number for the same calendar date regardless of time.
+ * Return how many full UTC days have elapsed since EPOCH.
+ * Ensures every device in every timezone resolves the same "today" verse.
  */
-function localDaysSinceEpoch() {
-  const now   = new Date();
-  const local = new Date(now.getFullYear(), now.getMonth(), now.getDate());
-  const ep    = new Date(EPOCH.getFullYear(), EPOCH.getMonth(), EPOCH.getDate());
-  return Math.floor((local - ep) / 86400000);
+function utcDaysSinceEpoch() {
+  const now = new Date();
+  const utcToday = Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate());
+  const utcEpoch = Date.UTC(EPOCH.getUTCFullYear(), EPOCH.getUTCMonth(), EPOCH.getUTCDate());
+  return Math.floor((utcToday - utcEpoch) / 86400000);
 }
 
 /** Get today's index (0–699). */
-const TODAY_DAY_INDEX = localDaysSinceEpoch();
+const TODAY_DAY_INDEX = utcDaysSinceEpoch();
 
 /** Resolve a day-offset to { chapter, verse, dayIndex, isToday } */
 function getVerseForOffset(offset) {
