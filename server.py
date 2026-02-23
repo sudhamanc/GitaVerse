@@ -85,6 +85,15 @@ class GitaVerseHandler(http.server.SimpleHTTPRequestHandler):
             self._json_response(400, {"error": "Invalid JSON"})
             return
 
+        # Lightweight capability probe used by frontend to detect server-key mode
+        if body.get("probe") is True:
+            has_server_key = bool(os.environ.get("ANTHROPIC_API_KEY"))
+            if not has_server_key:
+                self._json_response(503, {"ok": False, "serverKey": False})
+                return
+            self._json_response(200, {"ok": True, "serverKey": True})
+            return
+
         chapter = body.get("chapter", "")
         verse = body.get("verse", "")
         slok = body.get("slok", "")

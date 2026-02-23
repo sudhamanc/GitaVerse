@@ -30,6 +30,23 @@ export async function handler(event) {
     return { statusCode: 400, body: JSON.stringify({ error: 'Invalid JSON' }) };
   }
 
+  // Lightweight capability probe used by frontend to detect server-side key mode
+  if (body.probe === true) {
+    const hasServerKey = !!process.env.ANTHROPIC_API_KEY;
+    if (!hasServerKey) {
+      return {
+        statusCode: 503,
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ ok: false, serverKey: false })
+      };
+    }
+    return {
+      statusCode: 200,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ ok: true, serverKey: true })
+    };
+  }
+
   const { chapter, verse, slok, transliteration, translation } = body;
 
   const prompt = `You are a wise and compassionate teacher of the Bhagavad Gita.

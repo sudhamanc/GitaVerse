@@ -409,6 +409,7 @@ function showCard() {
 }
 
 function renderVerse(verseRef, verseData) {
+  LAST_VERSE_DATA = verseData;
   // Verse badge
   document.getElementById('chNum').textContent  = verseRef.chapter;
   document.getElementById('vNum').textContent   = verseRef.verse;
@@ -522,6 +523,7 @@ function initAccordions() {
 // Netlify AND the local dev server).  The proxy uses a server-side
 // key when available, or the user's own key sent in x-api-key.
 let HAS_SERVER_KEY = false;   // true when the server has its own key
+let LAST_VERSE_DATA = null;
 
 async function detectAiMode() {
   glog('info', 'Detecting AI mode...');
@@ -532,14 +534,16 @@ async function detectAiMode() {
       body: JSON.stringify({ probe: true }),
     }), 3000, 'AI probe timeout');
     glog('info', 'AI probe response:', res.status);
-    // 400 = function exists & server key is configured
+    // 200 = function exists & server key is configured
     // 503 = function exists but no server key (user key needed)
-    if (res.status === 400 || res.status === 200) {
+    if (res.status === 200) {
       HAS_SERVER_KEY = true;
     }
   } catch (err) {
     glog('info', 'AI probe failed (expected locally):', err.message);
     HAS_SERVER_KEY = false;
+  } finally {
+    if (LAST_VERSE_DATA) refreshAiSection(LAST_VERSE_DATA);
   }
 }
 
