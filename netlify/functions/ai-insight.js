@@ -16,6 +16,7 @@ const RATE_LIMIT_MAX_PER_IP = Number(process.env.RATE_LIMIT_MAX_PER_IP || 20);
 const RATE_LIMIT_MAX_PER_FP = Number(process.env.RATE_LIMIT_MAX_PER_FP || 20);
 const DAILY_QUOTA_PER_IP = Number(process.env.DAILY_QUOTA_PER_IP || 200);
 const DAILY_QUOTA_PER_FP = Number(process.env.DAILY_QUOTA_PER_FP || 120);
+const APP_ORIGIN = (process.env.APP_ORIGIN || 'https://dailygitaverse.netlify.app').trim();
 
 const MEM = new Map();
 
@@ -31,6 +32,27 @@ function clientIp(event) {
   return event.headers['x-nf-client-connection-ip']
     || event.headers['x-forwarded-for']?.split(',')[0]?.trim()
     || 'unknown';
+}
+
+function getHeader(event, name) {
+  return event.headers?.[name] || event.headers?.[name.toLowerCase()] || event.headers?.[name.toUpperCase()] || '';
+}
+
+function shouldRequireCaptcha(event) {
+  const origin = String(getHeader(event, 'origin') || '').trim();
+  const referer = String(getHeader(event, 'referer') || '').trim();
+  const secFetchSite = String(getHeader(event, 'sec-fetch-site') || '').trim().toLowerCase();
+  const userAgent = String(getHeader(event, 'user-agent') || '').trim();
+
+  if (!userAgent) return true;
+
+  const allowedOrigin = APP_ORIGIN;
+  const hasExpectedOrigin = !!allowedOrigin && origin === allowedOrigin;
+  const hasExpectedReferer = !!allowedOrigin && referer.startsWith(`${allowedOrigin}/`);
+  const browserLikeFetchSite = secFetchSite === 'same-origin' || secFetchSite === 'same-site';
+
+  const looksLikeInAppBrowserRequest = hasExpectedOrigin && hasExpectedReferer && browserLikeFetchSite;
+  return !looksLikeInAppBrowserRequest;
 }
 
 function utcDateKey() {
@@ -199,7 +221,8 @@ export async function handler(event) {
   if (limitError) return limitError;
 
   const usingServerKey = !!serverKey && !userKey;
-  if (usingServerKey && process.env.TURNSTILE_SECRET_KEY) {
+  const captchaEnabled = !!process.env.TURNSTILE_SECRET_KEY;
+  if (usingServerKey && captchaEnabled && shouldRequireCaptcha(event)) {
     const token = event.headers['x-turnstile-token'] || event.headers['X-Turnstile-Token'] || '';
     const ok = await verifyTurnstile(token, clientIp(event));
     if (!ok) {
