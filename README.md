@@ -77,6 +77,24 @@ When a server key is configured, AI insights work automatically for all visitors
 
 Users can still enter their own Anthropic API key in the app's Settings. The key is sent via `x-api-key` header to the Netlify Function, which proxies the request to Anthropic. The key is only stored in the user's browser.
 
+### Security Hardening (recommended for public deployment)
+
+Add these environment variables in Netlify to protect anonymous AI usage:
+
+- `TURNSTILE_SITE_KEY` — Cloudflare Turnstile site key (public key used by frontend widget)
+- `TURNSTILE_SECRET_KEY` — Cloudflare Turnstile secret key (server verification)
+- `UPSTASH_REDIS_REST_URL` — Upstash Redis REST URL for strict shared rate limiting
+- `UPSTASH_REDIS_REST_TOKEN` — Upstash Redis REST token
+
+Optional tuning knobs (defaults are already set in code):
+
+- `RATE_LIMIT_WINDOW_SECONDS` (default `60`)
+- `RATE_LIMIT_MAX_PER_IP` (default `20`)
+- `RATE_LIMIT_MAX_PER_FP` (default `20`)
+- `DAILY_QUOTA_PER_IP` (default `200`)
+- `DAILY_QUOTA_PER_FP` (default `120`)
+- `AI_TIMEOUT_MS` (default `15000`)
+
 ## Architecture Flow (Frontend → Backend)
 
 The app uses direct fetches for public verse/audio data, and a backend proxy for AI insight:

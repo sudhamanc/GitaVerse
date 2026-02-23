@@ -440,6 +440,20 @@ a:hover { color: var(--gold-light); }
   font-size: 0.9rem;
 }
 
+.captcha-wrap {
+  border: 1px solid var(--border-soft);
+  border-radius: var(--radius-sm);
+  padding: 8px;
+  margin-bottom: 8px;
+  background: rgba(244,161,0,0.03);
+}
+
+.captcha-text {
+  font-size: 0.78rem;
+  color: var(--cream-dim);
+  margin-bottom: 6px;
+}
+
 .ai-text {
   font-family: var(--font-serif);
   font-size: 0.92rem;

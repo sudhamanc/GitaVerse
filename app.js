@@ -524,6 +524,88 @@ function initAccordions() {
 // key when available, or the user's own key sent in x-api-key.
 let HAS_SERVER_KEY = false;   // true when the server has its own key
 let LAST_VERSE_DATA = null;
+let CAPTCHA_REQUIRED = false;
+let TURNSTILE_SITE_KEY = '';
+let TURNSTILE_TOKEN = '';
+let TURNSTILE_WIDGET_ID = null;
+let TURNSTILE_SCRIPT_PROMISE = null;
+let CLIENT_FP = '';
+
+function getClientFingerprint() {
+  if (CLIENT_FP) return CLIENT_FP;
+  const raw = [
+    navigator.userAgent || '',
+    navigator.language || '',
+    navigator.platform || '',
+    Intl.DateTimeFormat().resolvedOptions().timeZone || ''
+  ].join('|');
+  let hash = 0;
+  for (let i = 0; i < raw.length; i++) {
+    hash = ((hash << 5) - hash + raw.charCodeAt(i)) | 0;
+  }
+  CLIENT_FP = `gv_${Math.abs(hash).toString(36)}`;
+  return CLIENT_FP;
+}
+
+async function ensureTurnstileScript() {
+  if (window.turnstile) return;
+  if (TURNSTILE_SCRIPT_PROMISE) return TURNSTILE_SCRIPT_PROMISE;
+
+  TURNSTILE_SCRIPT_PROMISE = new Promise((resolve, reject) => {
+    const script = document.createElement('script');
+    script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit';
+    script.async = true;
+    script.defer = true;
+    script.onload = resolve;
+    script.onerror = reject;
+    document.head.appendChild(script);
+  });
+
+  return TURNSTILE_SCRIPT_PROMISE;
+}
+
+async function ensureCaptchaToken() {
+  if (!CAPTCHA_REQUIRED || !HAS_SERVER_KEY) return true;
+  if (TURNSTILE_TOKEN) return true;
+
+  const wrap = document.getElementById('captchaWrap');
+  wrap.classList.remove('hidden');
+
+  if (!TURNSTILE_SITE_KEY) {
+    document.getElementById('aiText').textContent = 'CAPTCHA is required but site key is not configured.';
+    return false;
+  }
+
+  try {
+    await ensureTurnstileScript();
+  } catch {
+    document.getElementById('aiText').textContent = 'Could not load CAPTCHA. Please refresh.';
+    return false;
+  }
+
+  if (TURNSTILE_WIDGET_ID === null) {
+    const widget = document.getElementById('turnstileWidget');
+    widget.innerHTML = '';
+    TURNSTILE_WIDGET_ID = window.turnstile.render(widget, {
+      sitekey: TURNSTILE_SITE_KEY,
+      theme: 'dark',
+      callback: (token) => {
+        TURNSTILE_TOKEN = token;
+        wrap.classList.add('hidden');
+      },
+      'expired-callback': () => {
+        TURNSTILE_TOKEN = '';
+        wrap.classList.remove('hidden');
+      },
+      'error-callback': () => {
+        TURNSTILE_TOKEN = '';
+        wrap.classList.remove('hidden');
+      }
+    });
+  }
+
+  return !!TURNSTILE_TOKEN;
+}
 
 async function detectAiMode() {
   glog('info', 'Detecting AI mode...');
@@ -533,15 +615,22 @@ async function detectAiMode() {
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ probe: true }),
     }), 3000, 'AI probe timeout');
+    const data = await res.json().catch(() => ({}));
     glog('info', 'AI probe response:', res.status);
     // 200 = function exists & server key is configured
     // 503 = function exists but no server key (user key needed)
-    if (res.status === 200) {
+    if (res.status === 200 && (data.serverKey !== false)) {
       HAS_SERVER_KEY = true;
+    } else {
+      HAS_SERVER_KEY = false;
     }
+    CAPTCHA_REQUIRED = !!data.captchaRequired;
+    TURNSTILE_SITE_KEY = data.turnstileSiteKey || '';
   } catch (err) {
     glog('info', 'AI probe failed (expected locally):', err.message);
     HAS_SERVER_KEY = false;
+    CAPTCHA_REQUIRED = false;
+    TURNSTILE_SITE_KEY = '';
   } finally {
     if (LAST_VERSE_DATA) refreshAiSection(LAST_VERSE_DATA);
   }
@@ -555,6 +644,7 @@ function refreshAiSection(verseData) {
   const hasKey = HAS_SERVER_KEY || !!getApiKey();
   document.getElementById('aiSetupPrompt').classList.toggle('hidden', hasKey);
   document.getElementById('aiInsightContent').classList.toggle('hidden', !hasKey);
+  document.getElementById('captchaWrap').classList.add('hidden');
 
   if (hasKey) {
     document.getElementById('aiText').textContent = 'Generating insight…';
@@ -576,11 +666,21 @@ async function fetchAiInsight(verseData) {
 
   try {
     // Build headers — include user's key if no server-side key
-    const headers = { 'content-type': 'application/json' };
+    const headers = {
+      'content-type': 'application/json',
+      'x-client-fingerprint': getClientFingerprint()
+    };
     if (!HAS_SERVER_KEY) {
       const key = getApiKey();
       if (!key) { textEl.textContent = 'Add your Anthropic API key in Settings.'; return; }
       headers['x-api-key'] = key;
+    } else if (CAPTCHA_REQUIRED) {
+      const ok = await ensureCaptchaToken();
+      if (!ok) {
+        textEl.textContent = 'Complete CAPTCHA verification to continue.';
+        return;
+      }
+      headers['x-turnstile-token'] = TURNSTILE_TOKEN;
     }
 
     const res = await fetch('/.netlify/functions/ai-insight', {
@@ -602,6 +702,10 @@ async function fetchAiInsight(verseData) {
   } catch (err) {
     textEl.textContent = `Couldn't get insight: ${err.message}`;
   } finally {
+    if (CAPTCHA_REQUIRED && HAS_SERVER_KEY && window.turnstile && TURNSTILE_WIDGET_ID !== null) {
+      TURNSTILE_TOKEN = '';
+      window.turnstile.reset(TURNSTILE_WIDGET_ID);
+    }
     loadingEl.classList.add('hidden');
     refreshBtn.disabled = false;
   }
