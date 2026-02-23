@@ -615,22 +615,17 @@ async function detectAiMode() {
       headers: { 'content-type': 'application/json' },
       body: JSON.stringify({ probe: true }),
     }), 3000, 'AI probe timeout');
-    const data = await res.json().catch(() => ({}));
     glog('info', 'AI probe response:', res.status);
     // 200 = function exists & server key is configured
     // 503 = function exists but no server key (user key needed)
-    if (res.status === 200 && (data.serverKey !== false)) {
+    if (res.status === 200) {
       HAS_SERVER_KEY = true;
     } else {
       HAS_SERVER_KEY = false;
     }
-    CAPTCHA_REQUIRED = !!data.captchaRequired;
-    TURNSTILE_SITE_KEY = data.turnstileSiteKey || '';
   } catch (err) {
     glog('info', 'AI probe failed (expected locally):', err.message);
     HAS_SERVER_KEY = false;
-    CAPTCHA_REQUIRED = false;
-    TURNSTILE_SITE_KEY = '';
   } finally {
     if (LAST_VERSE_DATA) refreshAiSection(LAST_VERSE_DATA);
   }
@@ -695,6 +690,14 @@ async function fetchAiInsight(verseData) {
       })
     });
     const data = await res.json();
+    if (!res.ok && data?.error === 'CAPTCHA_REQUIRED') {
+      CAPTCHA_REQUIRED = true;
+      TURNSTILE_SITE_KEY = data.siteKey || TURNSTILE_SITE_KEY;
+      TURNSTILE_TOKEN = '';
+      document.getElementById('aiText').textContent = 'Complete CAPTCHA verification to continue.';
+      await ensureCaptchaToken();
+      return;
+    }
     if (!res.ok) throw new Error(data.error || `HTTP ${res.status}`);
     const insight = data.insight || '';
 

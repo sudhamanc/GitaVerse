@@ -189,21 +189,10 @@ export async function handler(event) {
   // Lightweight capability probe used by frontend to detect server-side key mode
   if (body.probe === true) {
     const hasServerKey = !!serverKey;
-    const captchaRequired = !!(hasServerKey && process.env.TURNSTILE_SECRET_KEY);
     if (!hasServerKey) {
-      return json(503, {
-        ok: false,
-        serverKey: false,
-        captchaRequired: false,
-        turnstileSiteKey: ''
-      });
+      return json(503, { ok: false });
     }
-    return json(200, {
-      ok: true,
-      serverKey: true,
-      captchaRequired,
-      turnstileSiteKey: process.env.TURNSTILE_SITE_KEY || ''
-    });
+    return json(200, { ok: true });
   }
 
   const limitError = await enforceLimits(event);
@@ -214,7 +203,10 @@ export async function handler(event) {
     const token = event.headers['x-turnstile-token'] || event.headers['X-Turnstile-Token'] || '';
     const ok = await verifyTurnstile(token, clientIp(event));
     if (!ok) {
-      return json(403, { error: 'CAPTCHA verification failed' });
+      return json(403, {
+        error: 'CAPTCHA_REQUIRED',
+        siteKey: process.env.TURNSTILE_SITE_KEY || ''
+      });
     }
   }
 

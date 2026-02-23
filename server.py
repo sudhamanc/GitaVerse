@@ -89,9 +89,9 @@ class GitaVerseHandler(http.server.SimpleHTTPRequestHandler):
         if body.get("probe") is True:
             has_server_key = bool(os.environ.get("ANTHROPIC_API_KEY"))
             if not has_server_key:
-                self._json_response(503, {"ok": False, "serverKey": False})
+                self._json_response(503, {"ok": False})
                 return
-            self._json_response(200, {"ok": True, "serverKey": True})
+            self._json_response(200, {"ok": True})
             return
 
         chapter = body.get("chapter", "")
