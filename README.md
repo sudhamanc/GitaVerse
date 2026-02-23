@@ -87,42 +87,25 @@ The app uses direct fetches for public verse/audio data, and a backend proxy for
 - **Fallback path:** if server key is not configured, user can provide their own key in Settings, which is still sent to Netlify Function (never directly to Anthropic from browser)
 
 ```mermaid
-sequenceDiagram
-        actor User
-        participant Browser as Frontend (app.js)
-        participant SW as Service Worker (sw.js)
-        participant VerseAPI as Vedic Scriptures API
-        participant AudioAPI as gita-audio.jkyog.org
-        participant Fn as Netlify Function\n/.netlify/functions/ai-insight
-        participant Anthropic as Anthropic API
+flowchart TD
+    U[User] --> B[Frontend app.js]
 
-        rect rgb(35, 20, 0)
-            Browser->>VerseAPI: GET /slok/{chapter}/{verse}/
-            VerseAPI-->>Browser: Verse JSON
-            Browser->>AudioAPI: GET /audio/sanskrit/gita_audios/{ch}_{v}.mp3
-            AudioAPI-->>Browser: MP3 stream
-        end
+    B -->|GET /slok/{chapter}/{verse}/| V[Vedic Scriptures API]
+    V -->|Verse JSON| B
 
-        rect rgb(0, 28, 45)
-            Browser->>Fn: POST verse payload (no API key)
-            Note over Fn: Reads ANTHROPIC_API_KEY\nfrom server env
-            Fn->>Anthropic: POST /v1/messages with server key
-            Anthropic-->>Fn: Insight response
-            Fn-->>Browser: { insight }
-        end
+    B -->|GET /audio/sanskrit/gita_audios/{ch}_{v}.mp3| A[gita-audio.jkyog.org]
+    A -->|MP3 stream| B
 
-        rect rgb(45, 25, 0)
-            Browser->>SW: Register sw.js
-            SW-->>Browser: Network-first shell + verse API, cache-first fonts
-        end
+    B -->|POST verse payload \n(no key)| F[Netlify Function\n/.netlify/functions/ai-insight]
+    F -->|Read ANTHROPIC_API_KEY\nfrom env| F
+    F -->|POST /v1/messages| L[Anthropic API]
+    L -->|Insight response| F
+    F -->|JSON { insight }| B
 
-        rect rgb(55, 20, 20)
-            Note over Browser,Fn: Fallback when server key missing
-            Browser->>Fn: POST with x-api-key (user-provided)
-            Fn->>Anthropic: Forwards via proxy
-            Anthropic-->>Fn: Insight response
-            Fn-->>Browser: { insight }
-        end
+    B -. optional fallback .->|POST + x-api-key from Settings| F
+
+    B --> SW[Service Worker sw.js]
+    SW -->|Network-first: app shell + verse API\nCache-first: fonts| B
 ```
 
 ## AI Insight — Cost Estimate
