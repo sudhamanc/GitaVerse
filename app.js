@@ -32,7 +32,7 @@ function withTimeout(promise, ms, label = 'Request timeout') {
 
 // ── Constants ─────────────────────────────────────────────────
 
-const EPOCH = new Date('2024-01-01T00:00:00'); // Day 0
+const EPOCH = new Date('2024-01-01T00:00:00Z'); // Day 0
 
 // Verse counts per chapter (standard 700-verse edition)
 const CHAPTER_VERSE_COUNTS = [
@@ -307,6 +307,14 @@ function setupAudio(verseData) {
 
   audioState = 'idle';
   audioEl.src = '';
+  let audioLoadTimer = null;
+
+  function clearAudioTimer() {
+    if (audioLoadTimer) {
+      clearTimeout(audioLoadTimer);
+      audioLoadTimer = null;
+    }
+  }
 
   function setBtn(state) {
     audioBtn.classList.toggle('playing', state === 'playing');
@@ -329,6 +337,7 @@ function setupAudio(verseData) {
 
   // Audio element events
   audioEl.addEventListener('canplay', () => {
+    clearAudioTimer();
     if (audioState === 'loading') {
       audioState = 'playing';
       setBtn('playing');
@@ -337,6 +346,7 @@ function setupAudio(verseData) {
   }, { once: true });
 
   audioEl.addEventListener('error', () => {
+    clearAudioTimer();
     audioState = 'idle';
     setBtn('idle');
     glog('error', 'Audio playback error for URL:', verseData.audioUrl);
@@ -366,8 +376,17 @@ function setupAudio(verseData) {
       setBtn('loading');
       audioEl.src = verseData.audioUrl;
       audioEl.load();
+      audioLoadTimer = setTimeout(() => {
+        if (audioState === 'loading') {
+          audioEl.src = '';
+          audioState = 'idle';
+          setBtn('idle');
+          glog('error', 'Audio load timed out:', verseData.audioUrl);
+        }
+      }, 12000);
     } else if (audioState === 'loading') {
       // Cancel
+      clearAudioTimer();
       audioEl.src = '';
       audioState = 'idle';
       setBtn('idle');
@@ -448,17 +467,25 @@ function renderVerse(verseRef, verseData) {
 
 // ── Day Navigation ────────────────────────────────────────────
 
-let currentOffset = 0; // always 0 (today only)
+let currentOffset = 0;
+
+function updateHistoryButton() {
+  const btn = document.getElementById('yesterdayBtn');
+  if (!btn) return;
+  btn.textContent = currentOffset === 0 ? '← Yesterday' : '↺ Back to Today';
+}
 
 async function navigateTo(offset) {
   glog('info', 'navigateTo called, offset:', offset);
-  currentOffset = 0; // always today
-  const verseRef = getVerseForOffset(0);
+  currentOffset = offset === -1 ? -1 : 0;
+  const verseRef = getVerseForOffset(currentOffset);
   glog('info', 'Today\'s verse: Chapter', verseRef.chapter, 'Verse', verseRef.verse, '(cycle', verseRef.cyclePosition, ')');
 
   // Day strip
-  document.getElementById('dateDisplay').textContent = `Today · ${formatDate(0)}`;
+  const label = currentOffset === 0 ? 'Today' : 'Yesterday';
+  document.getElementById('dateDisplay').textContent = `${label} · ${formatDate(currentOffset)}`;
   document.getElementById('dayProgress').textContent = `Verse ${verseRef.cyclePosition} of 700`;
+  updateHistoryButton();
 
   // Reset accordions
   resetAccordions();
@@ -801,6 +828,9 @@ function init() {
   document.getElementById('clearApiKey').addEventListener('click', clearApiKey);
   document.getElementById('clearCache').addEventListener('click', clearCache);
   document.getElementById('aiOpenSettings').addEventListener('click', openSettings);
+  document.getElementById('yesterdayBtn').addEventListener('click', () => {
+    navigateTo(currentOffset === 0 ? -1 : 0);
+  });
 
   // Accordions
   initAccordions();
