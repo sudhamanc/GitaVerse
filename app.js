@@ -298,7 +298,7 @@ function normaliseVerseData(raw, chapter, verse) {
 // ── Audio ─────────────────────────────────────────────────────
 
 let audioState = 'idle'; // idle | loading | playing | paused | error
-const AUDIO_PROBE_TIMEOUT_MS = 4500;
+const AUDIO_PROBE_TIMEOUT_MS = 9000;
 const AUDIO_AVAILABILITY = new Map();
 let AUDIO_SETUP_SEQ = 0;
 
