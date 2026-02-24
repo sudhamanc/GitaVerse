@@ -16,9 +16,11 @@ const RATE_LIMIT_MAX_PER_IP = Number(process.env.RATE_LIMIT_MAX_PER_IP || 20);
 const RATE_LIMIT_MAX_PER_FP = Number(process.env.RATE_LIMIT_MAX_PER_FP || 20);
 const DAILY_QUOTA_PER_IP = Number(process.env.DAILY_QUOTA_PER_IP || 200);
 const DAILY_QUOTA_PER_FP = Number(process.env.DAILY_QUOTA_PER_FP || 120);
+const INSIGHT_CACHE_TTL_SECONDS = Number(process.env.INSIGHT_CACHE_TTL_SECONDS || 172800);
 const APP_ORIGIN = (process.env.APP_ORIGIN || 'https://dailygitaverse.netlify.app').trim();
 
 const MEM = new Map();
+const INSIGHT_MEM = new Map();
 
 function json(statusCode, body) {
   return {
@@ -99,6 +101,56 @@ async function incrementWithExpiry(key, ttlSeconds) {
   }
   existing.count += 1;
   return existing.count;
+}
+
+function textHash(value) {
+  let hash = 0;
+  for (let i = 0; i < value.length; i++) {
+    hash = ((hash << 5) - hash + value.charCodeAt(i)) | 0;
+  }
+  return Math.abs(hash).toString(36);
+}
+
+function insightCacheKey(validated) {
+  const combined = `${validated.chapter}|${validated.verse}|${validated.slok}|${validated.transliteration}|${validated.translation}`;
+  return `gv:ai:insight:v1:${validated.chapter}:${validated.verse}:${textHash(combined)}`;
+}
+
+async function getCachedInsight(key) {
+  const redisEnabled = !!(process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN);
+  if (redisEnabled) {
+    try {
+      const value = await redisCmd(['GET', key]);
+      return typeof value === 'string' && value ? value : null;
+    } catch (err) {
+      console.warn('[ai-insight] Redis GET failed:', err.message);
+    }
+  }
+
+  const now = Date.now();
+  const cached = INSIGHT_MEM.get(key);
+  if (!cached || cached.expireAt < now) {
+    INSIGHT_MEM.delete(key);
+    return null;
+  }
+  return cached.value;
+}
+
+async function setCachedInsight(key, value, ttlSeconds) {
+  const redisEnabled = !!(process.env.UPSTASH_REDIS_REST_URL && process.env.UPSTASH_REDIS_REST_TOKEN);
+  if (redisEnabled) {
+    try {
+      await redisCmd(['SETEX', key, String(ttlSeconds), value]);
+      return;
+    } catch (err) {
+      console.warn('[ai-insight] Redis SETEX failed:', err.message);
+    }
+  }
+
+  INSIGHT_MEM.set(key, {
+    value,
+    expireAt: Date.now() + ttlSeconds * 1000
+  });
 }
 
 async function enforceLimits(event) {
@@ -239,6 +291,16 @@ export async function handler(event) {
   }
 
   const { chapter, verse, slok, transliteration, translation } = validated;
+  const cacheEligible = usingServerKey;
+  const cacheKey = cacheEligible ? insightCacheKey(validated) : '';
+
+  if (cacheEligible) {
+    const cachedInsight = await getCachedInsight(cacheKey);
+    if (cachedInsight) {
+      console.log(`[ai-insight] Cache hit for Ch.${chapter}:${verse}`);
+      return json(200, { insight: cachedInsight, cached: true });
+    }
+  }
 
   const prompt = `You are a wise and compassionate teacher of the Bhagavad Gita.
 
@@ -278,6 +340,10 @@ Please give a brief (150–200 word), warm, and practical insight about this ver
 
     const insight = data.content?.[0]?.text || '';
     console.log(`[ai-insight] Success — ${insight.length} chars for Ch.${body.chapter}:${body.verse}`);
+
+    if (cacheEligible && insight) {
+      await setCachedInsight(cacheKey, insight, INSIGHT_CACHE_TTL_SECONDS);
+    }
 
     return json(200, { insight });
   } catch (err) {
