@@ -417,6 +417,7 @@ a:hover { color: var(--gold-light); }
   border-bottom: none;
   padding: 8px 14px 10px;
   min-height: 0;
+  overflow-y: auto;
 }
 
 .ai-header {
@@ -468,10 +469,6 @@ a:hover { color: var(--gold-light); }
   color: var(--cream);
   white-space: pre-wrap;
   margin-bottom: 0;
-  display: -webkit-box;
-  -webkit-line-clamp: 6;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
 }
 
 /* --- Navigation Bar (removed — today only) --- */

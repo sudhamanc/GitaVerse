@@ -20,4 +20,4 @@ __pycache__/
 !.env.example
 
 # Local security verification output
-gv-security-output.txt
+gv-security-output*.txt
