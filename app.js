@@ -298,6 +298,64 @@ function normaliseVerseData(raw, chapter, verse) {
 // ── Audio ─────────────────────────────────────────────────────
 
 let audioState = 'idle'; // idle | loading | playing | paused | error
+const AUDIO_PROBE_TIMEOUT_MS = 4500;
+const AUDIO_AVAILABILITY = new Map();
+let AUDIO_SETUP_SEQ = 0;
+
+function checkAudioAvailability(url) {
+  if (AUDIO_AVAILABILITY.has(url)) {
+    return Promise.resolve(AUDIO_AVAILABILITY.get(url));
+  }
+
+  return new Promise((resolve) => {
+    const probe = document.createElement('audio');
+    let settled = false;
+
+    const finish = (ok) => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      probe.removeEventListener('loadedmetadata', onSuccess);
+      probe.removeEventListener('canplay', onSuccess);
+      probe.removeEventListener('error', onFailure);
+      probe.src = '';
+      try { probe.load(); } catch { /* ignore */ }
+      AUDIO_AVAILABILITY.set(url, ok);
+      resolve(ok);
+    };
+
+    const onSuccess = () => finish(true);
+    const onFailure = () => finish(false);
+
+    const timer = setTimeout(() => finish(false), AUDIO_PROBE_TIMEOUT_MS);
+
+    probe.preload = 'metadata';
+    probe.addEventListener('loadedmetadata', onSuccess, { once: true });
+    probe.addEventListener('canplay', onSuccess, { once: true });
+    probe.addEventListener('error', onFailure, { once: true });
+    probe.src = url;
+    probe.load();
+  });
+}
+
+async function setupAudioIfAvailable(verseData) {
+  const seq = ++AUDIO_SETUP_SEQ;
+  const audioRow = document.getElementById('audioRow');
+  if (!audioRow) return;
+
+  audioRow.classList.add('hidden');
+  const isAvailable = await checkAudioAvailability(verseData.audioUrl);
+
+  if (seq !== AUDIO_SETUP_SEQ) return;
+
+  if (!isAvailable) {
+    glog('info', 'Audio unavailable for this verse in current network/region');
+    return;
+  }
+
+  audioRow.classList.remove('hidden');
+  setupAudio(verseData);
+}
 
 function setupAudio(verseData) {
   const audioEl    = document.getElementById('audioEl');
@@ -457,7 +515,7 @@ function renderVerse(verseRef, verseData) {
   document.getElementById('dayProgress').textContent = cycleText;
 
   // Audio
-  setupAudio(verseData);
+  setupAudioIfAvailable(verseData);
 
   // AI section: show/hide setup vs. content
   refreshAiSection(verseData);
