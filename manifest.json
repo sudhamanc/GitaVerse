@@ -31,11 +31,18 @@
   ],
   "screenshots": [
     {
-      "src": "screenshot.png",
-      "sizes": "390x844",
+      "src": "Screenshot1.png",
+      "sizes": "367x828",
       "type": "image/png",
       "form_factor": "narrow",
-      "label": "Daily Shloka view"
+      "label": "Today's Shloka"
+    },
+    {
+      "src": "Screenshot2.png",
+      "sizes": "367x828",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "Yesterday's Shloka"
     }
   ],
   "shortcuts": [

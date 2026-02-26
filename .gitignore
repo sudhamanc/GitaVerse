@@ -21,3 +21,14 @@ __pycache__/
 
 # Local security verification output
 gv-security-output*.txt
+
+# Android / TWA build artifacts
+*.apk
+*.aab
+*.idsig
+android.keystore
+.gradle/
+build/
+app/build/
+local.properties
+manifest-checksum.txt
