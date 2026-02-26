@@ -1,0 +1,8 @@
+[{
+  "relation": ["delegate_permission/common.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "app.netlify.dailygitaverse",
+    "sha256_cert_fingerprints": ["FE:08:D0:81:3D:03:F1:D9:9D:E3:8E:8C:C9:B9:7D:F6:01:E5:1B:C6:C5:FD:59:F2:AF:61:E8:DA:EA:54:6C:24"]
+  }
+}]
