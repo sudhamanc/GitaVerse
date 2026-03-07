@@ -264,10 +264,7 @@ a:hover { color: var(--gold-light); }
   margin-bottom: 8px;
   text-shadow: 0 0 40px rgba(255,208,102,0.15);
   white-space: pre-wrap;
-  display: -webkit-box;
-  -webkit-line-clamp: 3;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+  overflow-wrap: anywhere;
 }
 
 .transliteration {
@@ -277,10 +274,7 @@ a:hover { color: var(--gold-light); }
   color: var(--cream-dim);
   line-height: 1.35;
   white-space: pre-wrap;
-  display: -webkit-box;
-  -webkit-line-clamp: 2;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+  overflow-wrap: anywhere;
 }
 
 /* --- Audio Row --- */
@@ -350,10 +344,8 @@ a:hover { color: var(--gold-light); }
   font-size: clamp(0.95rem, 3vw, 1.05rem);
   line-height: 1.45;
   color: var(--cream);
-  display: -webkit-box;
-  -webkit-line-clamp: 4;
-  -webkit-box-orient: vertical;
-  overflow: hidden;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
 }
 
 .translation-attribution {
