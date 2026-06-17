@@ -113,7 +113,7 @@ function textHash(value) {
 
 function insightCacheKey(validated) {
   const combined = `${validated.chapter}|${validated.verse}|${validated.slok}|${validated.transliteration}|${validated.translation}`;
-  return `gv:ai:insight:v1:${validated.chapter}:${validated.verse}:${textHash(combined)}`;
+  return `gv:ai:insight:v2:${validated.chapter}:${validated.verse}:${textHash(combined)}`;
 }
 
 async function getCachedInsight(key) {
