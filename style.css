@@ -413,6 +413,9 @@ a:hover { color: var(--gold-light); }
 .ai-section {
   border-bottom: none;
   padding: 8px 14px 10px;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .ai-text {
@@ -566,7 +569,6 @@ a:hover { color: var(--gold-light); }
 .tab-panel {
   display: none;
   flex-direction: column;
-  overflow-y: auto;
   min-height: 0;
 }
 
@@ -598,6 +600,10 @@ a:hover { color: var(--gold-light); }
 .ask-krishna-section {
   padding: 10px 14px 14px;
   border-top: 1px solid var(--border-soft);
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
 }
 
 .ask-krishna-label {
@@ -648,6 +654,9 @@ a:hover { color: var(--gold-light); }
   line-height: 1.5;
   color: var(--cream);
   white-space: pre-wrap;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 /* --- Settings Drawer --- */
