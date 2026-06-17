@@ -22,6 +22,9 @@ __pycache__/
 # Local security verification output
 gv-security-output*.txt
 
+# Full verse archive (pushed to sudhamanc/gitaverse-data instead)
+data/verses-full.json
+
 # Android / TWA build artifacts
 *.apk
 *.aab

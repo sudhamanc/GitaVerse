@@ -1,20 +1,18 @@
 /* ============================================================
    GitaVerse — Service Worker
    Strategy:
-   • App shell (HTML, CSS, JS, fonts) → Cache-first
-   • Verse API calls (vedicscriptures.github.io) → Network-first,
-     cache as fallback so the app works offline after first visit
+   • App shell (HTML, CSS, JS, fonts, verse data) → Cache-first
    • Audio files → Network-only (too large to pre-cache)
    ============================================================ */
 
-const SHELL_CACHE   = 'gitaverse-shell-v4';
-const API_CACHE     = 'gitaverse-api-v1';
+const SHELL_CACHE   = 'gitaverse-shell-v5';
 
 const SHELL_ASSETS = [
   '/',
   '/index.html',
   '/style.css',
   '/app.js',
+  '/data/verses.json',
   '/manifest.json',
   '/icon.svg'
 ];
@@ -30,7 +28,7 @@ self.addEventListener('install', event => {
 
 // ── Activate: clean up old caches ────────────────────────────
 self.addEventListener('activate', event => {
-  const valid = [SHELL_CACHE, API_CACHE];
+  const valid = [SHELL_CACHE];
   event.waitUntil(
     caches.keys()
       .then(keys => Promise.all(
@@ -51,12 +49,6 @@ self.addEventListener('fetch', event => {
   // Audio files — skip caching (potentially large)
   if (url.pathname.includes('/audio/')) {
     return; // fall through to browser default
-  }
-
-  // Verse API calls — network-first with cache fallback
-  if (url.hostname === 'vedicscriptures.github.io') {
-    event.respondWith(networkFirstWithCache(event.request, API_CACHE));
-    return;
   }
 
   // Google Fonts — cache-first (rarely change)

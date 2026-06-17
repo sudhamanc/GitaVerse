@@ -62,44 +62,11 @@ const CHAPTER_NAMES = [
   'Moksha Sanyasa Yoga — Liberation & Renunciation'
 ];
 
-// Primary public API — no auth required, CORS open
-// Returns JSON with slok, transliteration, siva.et (Sivananda translation), etc.
-const API_PRIMARY = 'https://vedicscriptures.github.io/slok';
+// Local verse data — bundled from vedicscriptures.github.io (pinned commit e42101a)
+// Contains 7 translators: siva, gambir, tej, purohit, adi, san, prabhu
+let VERSE_DATA = null; // loaded on first use from data/verses.json
 
-// Fallback: a handful of the most famous shlokas so the app works offline on first load
-const OFFLINE_FALLBACK = {
-  '2_47': {
-    slok: 'कर्मण्येवाधिकारस्ते मा फलेषु कदाचन ।\nमा कर्मफलहेतुर्भूर्मा ते सङ्गोऽस्त्वकर्मणि ॥ ४७॥',
-    transliteration: 'karmaṇy-evādhikāras te mā phaleṣhu kadāchana\nmā karma-phala-hetur bhūr mā te saṅgo \'stvakarmaṇi',
-    siva: { et: 'You have a right to perform your prescribed duties, but you are not entitled to the fruits of your actions. Never consider yourself the cause of the results of your activities, and never be attached to not doing your duty.' },
-    purohit: { et: 'You have the right to work, but never to the fruit of work. You should never engage in action for the sake of reward, nor should you long for inaction.' },
-    wordmeanings: 'karmaṇi—in prescribed duties; eva—certainly; adhikāraḥ—right; te—of you; mā—never; phaleṣhu—in the fruits; kadāchana—at any time; mā—never; karma-phala—results of the activities; hetuḥ—cause; bhūḥ—become; mā—never; te—your; saṅgaḥ—attachment; astu—be; akarmaṇi—in inaction'
-  },
-  '2_20': {
-    slok: 'न जायते म्रियते वा कदाचि\nन्नायं भूत्वा भविता वा न भूयः ।\nअजो नित्यः शाश्वतोऽयं पुराणो\nन हन्यते हन्यमाने शरीरे ॥ २०॥',
-    transliteration: 'na jāyate mriyate vā kadāchin\nnāyaṁ bhūtvā bhavitā vā na bhūyaḥ\najo nityaḥ śhāśhvato \'yaṁ purāṇo\nna hanyate hanyamāne śharīre',
-    siva: { et: 'The soul is never born, nor does it ever die at any time. It has not come into being, does not come into being, and will not come into being. It is unborn, eternal, ever-existing, and primeval. The soul is not slain when the body is slain.' },
-    wordmeanings: 'na—never; jāyate—is born; mriyate—dies; vā—or; kadāchin—at any time; na—never; ayam—this soul; bhūtvā—having once existed; bhavitā—will again exist; vā—or; na—not; bhūyaḥ—further; ajaḥ—unborn; nityaḥ—eternal; śhāśhvataḥ—permanent; ayam—this; purāṇaḥ—ancient; na hanyate—is not killed; hanyamāne—being killed; śharīre—the body'
-  },
-  '4_7': {
-    slok: 'यदा यदा हि धर्मस्य ग्लानिर्भवति भारत ।\nअभ्युत्थानमधर्मस्य तदात्मानं सृजाम्यहम् ॥ ७॥',
-    transliteration: 'yadā yadā hi dharmasya glānir bhavati bhārata\nabhyutthānam adharmasya tadātmānaṁ sṛjāmy aham',
-    siva: { et: 'Whenever there is a decline of righteousness, O Bharata, and a rise of unrighteousness, then I manifest Myself.' },
-    wordmeanings: 'yadā yadā—whenever; hi—certainly; dharmasya—of righteousness; glāniḥ—decline; bhavati—is; bhārata—Arjuna (descendant of Bharata); abhyutthānam—rise; adharmasya—of unrighteousness; tadā—at that time; ātmānam—myself; sṛjāmi—manifest; aham—I'
-  },
-  '9_26': {
-    slok: 'पत्रं पुष्पं फलं तोयं यो मे भक्त्या प्रयच्छति ।\nतदहं भक्त्युपहृतमश्नामि प्रयतात्मनः ॥ २६॥',
-    transliteration: 'patraṁ puṣhpaṁ phalaṁ toyaṁ yo me bhaktyā prayachchhati\ntad ahaṁ bhaktyupahṛitam aśhnāmi prayatātmanaḥ',
-    siva: { et: 'Whoever offers Me with devotion a leaf, a flower, a fruit, or water — that devout offering from a pure-hearted person, I accept.' },
-    wordmeanings: 'patram—a leaf; puṣhpam—a flower; phalam—a fruit; toyam—water; yaḥ—who; me—to me; bhaktyā—with devotion; prayachchhati—offers; tat—that; aham—I; bhakti-upahṛitam—offered with devotion; aśhnāmi—accept; prayata-ātmanaḥ—one in pure consciousness'
-  },
-  '18_66': {
-    slok: 'सर्वधर्मान्परित्यज्य मामेकं शरणं व्रज ।\nअहं त्वा सर्वपापेभ्यो मोक्षयिष्यामि मा शुचः ॥ ६६॥',
-    transliteration: 'sarva-dharmān parityajya mām ekaṁ śharaṇaṁ vraja\nahaṁ tvāṁ sarva-pāpebhyo mokṣhayiṣhyāmi mā śhuchaḥ',
-    siva: { et: 'Abandoning all duties, take refuge in Me alone. I will liberate you from all sins. Do not grieve.' },
-    wordmeanings: 'sarva-dharmān—all varieties of dharma; parityajya—abandoning; mām—unto Me; ekam—only; śharaṇam—surrender; vraja—go; aham—I; tvām—you; sarva—all; pāpebhyaḥ—from sins; mokṣhayiṣhyāmi—will liberate; mā—do not; śhuchaḥ—grieve'
-  }
-};
+
 
 // ── Deterministic verse list ────────────────────────────────
 
@@ -199,19 +166,20 @@ function saveToCache(chapter, verse, data) {
 }
 
 /**
- * Fetch verse data from the public Vedic Scriptures API.
- * API: https://vedicscriptures.github.io/slok/{chapter}/{verse}/
- * Response includes: slok, transliteration, siva, tej, purohit, wordmeanings, …
+ * Load the bundled verse data JSON (fetched once, then cached in memory).
  */
-async function fetchFromAPI(chapter, verse) {
-  const url = `${API_PRIMARY}/${chapter}/${verse}/`;
-  const res  = await withTimeout(fetch(url), 8000, 'Verse API timeout');
-  if (!res.ok) throw new Error(`HTTP ${res.status}`);
-  return res.json();
+async function ensureVerseData() {
+  if (VERSE_DATA) return VERSE_DATA;
+  glog('info', 'Loading bundled verse data...');
+  const res = await fetch('data/verses.json');
+  if (!res.ok) throw new Error(`Failed to load verse data: HTTP ${res.status}`);
+  VERSE_DATA = await res.json();
+  glog('info', `Loaded ${Object.keys(VERSE_DATA).length} verses from local bundle`);
+  return VERSE_DATA;
 }
 
 /**
- * Load verse data: cache → API → offline fallback (for famous shlokas).
+ * Load verse data: cache → local bundle.
  * Returns normalised { slok, transliteration, translation, attribution,
  *                      wordMeanings, commentary, audioUrl } or throws.
  */
@@ -223,22 +191,12 @@ async function loadVerse(chapter, verse) {
     return cached;
   }
 
-  // 2. Try API
-  let raw;
-  try {
-    glog('info', 'Fetching from API:', `${API_PRIMARY}/${chapter}/${verse}/`);
-    raw = await fetchFromAPI(chapter, verse);
-    glog('info', 'API fetch successful');
-  } catch (err) {
-    glog('error', 'API fetch failed:', err.message);
-    // 3. Offline fallback for a handful of famous shlokas
-    const fb = OFFLINE_FALLBACK[`${chapter}_${verse}`];
-    if (fb) {
-      glog('info', 'Using offline fallback');
-      raw = fb;
-    } else {
-      throw err; // propagate to caller
-    }
+  // 2. Load from bundled data
+  const data = await ensureVerseData();
+  const key = `${chapter}_${verse}`;
+  const raw = data[key];
+  if (!raw) {
+    throw new Error(`Verse ${chapter}:${verse} not found in local data`);
   }
 
   const normalised = normaliseVerseData(raw, chapter, verse);
