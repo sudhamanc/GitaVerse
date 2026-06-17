@@ -226,10 +226,12 @@ function normaliseVerseData(raw, chapter, verse) {
 
   for (const t of translators) {
     const entry = raw[t.key];
-    if (entry && (entry.et || entry.ht)) {
-      translation = entry.et || entry.ht || '';
+    if (entry && entry.et) {
+      // Skip entries that say "did not comment" — fall through to next translator
+      if (entry.et.toLowerCase().includes('did not comment')) continue;
+      translation = entry.et;
       attribution = t.name;
-      commentary  = entry.sc || entry.hc || '';
+      commentary  = entry.ec || entry.sc || '';
       break;
     }
   }
