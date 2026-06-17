@@ -310,7 +310,7 @@ Sanskrit: ${slok}
 Transliteration: ${transliteration}
 Standard translation: ${translation}
 
-Please give a brief (150–200 word), warm, and practical insight about this verse — connecting its wisdom to everyday modern life. Write in plain paragraphs, no bullet points or headers. Speak directly to the reader.`;
+Please give a brief (100–120 word), warm, and practical insight about this verse — connecting its wisdom to everyday modern life. Write in plain paragraphs, no bullet points or headers. Speak directly to the reader.`;
 
   try {
     const controller = new AbortController();
