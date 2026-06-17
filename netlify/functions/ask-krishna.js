@@ -157,7 +157,15 @@ Translation: ${translation}
 
 The reader asks: "${question}"
 
-Respond warmly in 150–250 words, connecting your answer to the wisdom in this verse. Speak directly to the reader as "you". Be practical and grounded in modern life. No bullet points or headers — write in flowing paragraphs.`;
+Respond in exactly this format (keep the bold markers):
+
+**Context:** One sentence connecting the verse to their question.
+
+**Wisdom:** 2-3 sentences of Krishna's teaching, practical and grounded in modern life.
+
+**Action:** One clear, actionable step the reader can take today.
+
+Speak directly to the reader as "you". Be warm, concise, and specific. Total response under 120 words.`;
 
   try {
     const controller = new AbortController();

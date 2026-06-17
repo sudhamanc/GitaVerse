@@ -456,7 +456,6 @@ function renderVerse(verseRef, verseData) {
 
   // Sanskrit
   document.getElementById('sanskritText').textContent  = verseData.slok;
-  document.getElementById('translitText').textContent  = verseData.transliteration;
 
   // Translation
   document.getElementById('translationText').textContent  = verseData.translation || '(Translation unavailable)';
@@ -894,7 +893,11 @@ async function askKrishna() {
     if (!res.ok) {
       response.textContent = data.error || 'Something went wrong. Please try again.';
     } else {
-      response.textContent = data.answer || '';
+      // Render **bold** markers as <strong> tags
+      const sanitised = (data.answer || '')
+        .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+        .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>');
+      response.innerHTML = sanitised;
     }
   } catch (err) {
     response.textContent = err.message || 'Could not reach the server. Please try again.';

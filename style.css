@@ -559,6 +559,13 @@ a:hover { color: var(--gold-light); }
   border-top: 1px solid var(--border-soft);
 }
 
+.ask-krishna-label {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: var(--gold);
+  letter-spacing: 0.05em;
+}
+
 .ask-krishna-hint {
   font-size: 0.78rem;
   color: var(--muted);
@@ -574,18 +581,19 @@ a:hover { color: var(--gold-light); }
 .ask-krishna-input {
   flex: 1;
   background: var(--bg);
-  border: 1px solid var(--border);
+  border: 2px solid var(--gold-dim);
   border-radius: var(--radius-sm);
   color: var(--text);
   font-family: var(--font-ui);
   font-size: 0.88rem;
   padding: 8px 12px;
   outline: none;
-  transition: border-color 0.2s;
+  transition: border-color 0.2s, box-shadow 0.2s;
 }
 
 .ask-krishna-input:focus {
   border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(74,222,128,0.15);
 }
 
 .ask-krishna-input::placeholder {
@@ -599,6 +607,9 @@ a:hover { color: var(--gold-light); }
   line-height: 1.5;
   color: var(--cream);
   white-space: pre-wrap;
+  max-height: 250px;
+  overflow-y: auto;
+  padding-right: 4px;
 }
 
 /* --- Settings Drawer --- */
