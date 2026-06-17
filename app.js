@@ -251,6 +251,8 @@ function normaliseVerseData(raw, chapter, verse) {
     attribution,
     wordMeanings:  raw.wordmeanings || raw.word_meanings || raw.wordMeanings || '',
     commentary,
+    reflection:    raw.reflection || '',
+    story:         raw.story || '',
     audioUrl
   };
 }
@@ -468,6 +470,24 @@ function renderVerse(verseRef, verseData) {
     accCommentary.classList.remove('hidden');
   } else {
     accCommentary.classList.add('hidden');
+  }
+
+  // Story accordion
+  const accStory = document.getElementById('accordionStory');
+  if (verseData.story) {
+    document.getElementById('storyText').textContent = verseData.story;
+    accStory.classList.remove('hidden');
+  } else {
+    accStory.classList.add('hidden');
+  }
+
+  // Reflection card
+  const reflectionCard = document.getElementById('reflectionCard');
+  if (verseData.reflection) {
+    document.getElementById('reflectionText').textContent = verseData.reflection;
+    reflectionCard.classList.remove('hidden');
+  } else {
+    reflectionCard.classList.add('hidden');
   }
 
   // Day strip
@@ -830,6 +850,61 @@ function clearCache() {
   document.getElementById('cacheInfo').textContent = ` (cache cleared)`;
 }
 
+// ── Ask Krishna ────────────────────────────────────────────────
+
+async function askKrishna() {
+  const input = document.getElementById('askKrishnaInput');
+  const btn = document.getElementById('askKrishnaBtn');
+  const loading = document.getElementById('askKrishnaLoading');
+  const response = document.getElementById('askKrishnaResponse');
+  const question = (input.value || '').trim();
+
+  if (!question) return;
+  if (question.length > 500) {
+    response.textContent = 'Please keep your question under 500 characters.';
+    response.classList.remove('hidden');
+    return;
+  }
+
+  const verseData = LAST_VERSE_DATA;
+  if (!verseData) return;
+
+  btn.disabled = true;
+  loading.classList.remove('hidden');
+  response.classList.add('hidden');
+
+  const apiKey = localStorage.getItem('gv_anthropic_key') || '';
+  const headers = { 'Content-Type': 'application/json' };
+  if (apiKey) headers['x-api-key'] = apiKey;
+  headers['x-client-fingerprint'] = getClientFingerprint();
+
+  try {
+    const res = await withTimeout(fetch('/.netlify/functions/ask-krishna', {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        chapter: verseData.chapter,
+        verse: verseData.verse,
+        translation: verseData.translation,
+        question
+      })
+    }), 20000, 'Request timed out');
+
+    const data = await res.json();
+    if (!res.ok) {
+      response.textContent = data.error || 'Something went wrong. Please try again.';
+    } else {
+      response.textContent = data.answer || '';
+    }
+  } catch (err) {
+    response.textContent = err.message || 'Could not reach the server. Please try again.';
+  }
+
+  loading.classList.add('hidden');
+  response.classList.remove('hidden');
+  btn.disabled = false;
+}
+
 // ── Bootstrap ──────────────────────────────────────────────────
 
 function init() {
@@ -852,6 +927,12 @@ function init() {
 
   // Accordions
   initAccordions();
+
+  // Ask Krishna
+  document.getElementById('askKrishnaBtn').addEventListener('click', askKrishna);
+  document.getElementById('askKrishnaInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') askKrishna();
+  });
 
   // SW cleanup + fresh registration (fire-and-forget, never blocks verse load)
   const swClean = window.__swReady || Promise.resolve();

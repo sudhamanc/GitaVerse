@@ -5,7 +5,7 @@
    • Audio files → Network-only (too large to pre-cache)
    ============================================================ */
 
-const SHELL_CACHE   = 'gitaverse-shell-v5';
+const SHELL_CACHE   = 'gitaverse-shell-v6';
 
 const SHELL_ASSETS = [
   '/',

@@ -25,6 +25,10 @@ gv-security-output*.txt
 # Full verse archive (pushed to sudhamanc/gitaverse-data instead)
 data/verses-full.json
 
+# Generated prompt/output files (regenerable via scripts)
+scripts/prompts/
+scripts/promptoutput/
+
 # Android / TWA build artifacts
 *.apk
 *.aab

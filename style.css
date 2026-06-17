@@ -1,26 +1,26 @@
 /* ============================================================
    GitaVerse — CSS
-   Mobile-first, dark saffron/gold spiritual theme
+   Mobile-first, dark forest/jade spiritual theme
    ============================================================ */
 
 /* --- Custom Properties --- */
 :root {
-  --bg:          #110600;
-  --bg-card:     #1e0c00;
-  --bg-card2:    #260f00;
-  --border:      rgba(244, 161, 0, 0.18);
-  --border-soft: rgba(244, 161, 0, 0.08);
+  --bg:          #0b0f0d;
+  --bg-card:     #141c18;
+  --bg-card2:    #1a2520;
+  --border:      rgba(74, 222, 128, 0.18);
+  --border-soft: rgba(74, 222, 128, 0.08);
 
-  --gold:        #f4a100;
-  --gold-light:  #ffd066;
-  --gold-dim:    #c07800;
-  --saffron:     #e06b00;
-  --cream:       #fdf0d5;
-  --cream-dim:   #c8a87a;
-  --muted:       #7a5c38;
+  --gold:        #4ade80;
+  --gold-light:  #86efac;
+  --gold-dim:    #22c55e;
+  --saffron:     #34d399;
+  --cream:       #f0f5f2;
+  --cream-dim:   #a8c4b4;
+  --muted:       #63786d;
 
-  --text:        #fdf0d5;
-  --text-dim:    #b08040;
+  --text:        #f0f5f2;
+  --text-dim:    #7a9e8a;
 
   --font-deva:   'Noto Sans Devanagari', serif;
   --font-serif:  'Crimson Text', Georgia, serif;
@@ -99,7 +99,7 @@ a:hover { color: var(--gold-light); }
   font-size: 2rem;
   color: var(--gold);
   line-height: 1;
-  text-shadow: 0 0 20px rgba(244,161,0,0.5);
+  text-shadow: 0 0 20px rgba(74,222,128,0.5);
   user-select: none;
 }
 
@@ -138,7 +138,7 @@ a:hover { color: var(--gold-light); }
   justify-content: center;
   transition: color 0.2s, background 0.2s;
 }
-.icon-btn:hover { color: var(--gold); background: rgba(244,161,0,0.08); }
+.icon-btn:hover { color: var(--gold); background: rgba(74,222,128,0.08); }
 
 /* --- Day Strip --- */
 .day-strip {
@@ -190,7 +190,7 @@ a:hover { color: var(--gold-light); }
   font-size: 4rem;
   color: var(--gold);
   animation: om-pulse 2s ease-in-out infinite;
-  text-shadow: 0 0 30px rgba(244,161,0,0.4);
+  text-shadow: 0 0 30px rgba(74,222,128,0.4);
 }
 
 .loader-om.small { font-size: 2rem; }
@@ -227,7 +227,7 @@ a:hover { color: var(--gold-light); }
 /* --- Verse Badge --- */
 .verse-badge {
   padding: 10px 14px 8px;
-  background: linear-gradient(135deg, rgba(244,161,0,0.12), rgba(224,107,0,0.06));
+  background: linear-gradient(135deg, rgba(74,222,128,0.12), rgba(34,197,94,0.06));
   border-bottom: 1px solid var(--border-soft);
   display: flex;
   flex-direction: column;
@@ -262,7 +262,7 @@ a:hover { color: var(--gold-light); }
   color: var(--gold-light);
   line-height: 1.45;
   margin-bottom: 8px;
-  text-shadow: 0 0 40px rgba(255,208,102,0.15);
+  text-shadow: 0 0 40px rgba(134,239,172,0.15);
   white-space: pre-wrap;
   overflow-wrap: anywhere;
 }
@@ -290,8 +290,8 @@ a:hover { color: var(--gold-light); }
   display: flex;
   align-items: center;
   gap: 8px;
-  background: rgba(244,161,0,0.1);
-  border: 1px solid rgba(244,161,0,0.25);
+  background: rgba(74,222,128,0.1);
+  border: 1px solid rgba(74,222,128,0.25);
   border-radius: 999px;
   color: var(--gold);
   font-size: 0.85rem;
@@ -302,8 +302,8 @@ a:hover { color: var(--gold-light); }
   flex-shrink: 0;
 }
 
-.audio-btn:hover  { background: rgba(244,161,0,0.18); border-color: rgba(244,161,0,0.5); }
-.audio-btn:active { background: rgba(244,161,0,0.25); }
+.audio-btn:hover  { background: rgba(74,222,128,0.18); border-color: rgba(74,222,128,0.5); }
+.audio-btn:active { background: rgba(74,222,128,0.25); }
 
 .audio-btn.playing { color: var(--saffron); border-color: var(--saffron); }
 .audio-btn.loading { opacity: 0.7; cursor: wait; }
@@ -378,7 +378,7 @@ a:hover { color: var(--gold-light); }
   transition: color 0.2s, background 0.2s;
 }
 
-.accordion-trigger:hover { color: var(--gold); background: rgba(244,161,0,0.04); }
+.accordion-trigger:hover { color: var(--gold); background: rgba(74,222,128,0.04); }
 .accordion-trigger[aria-expanded="true"] { color: var(--gold); }
 
 .accordion-icon {
@@ -444,7 +444,7 @@ a:hover { color: var(--gold-light); }
   border-radius: var(--radius-sm);
   padding: 8px;
   margin-bottom: 8px;
-  background: rgba(244,161,0,0.03);
+  background: rgba(74,222,128,0.03);
 }
 
 .captcha-text {
@@ -489,9 +489,9 @@ a:hover { color: var(--gold-light); }
 .btn-primary:active { transform: scale(0.97); }
 
 .btn-secondary {
-  background: rgba(244,161,0,0.12);
+  background: rgba(74,222,128,0.12);
   color: var(--gold);
-  border: 1px solid rgba(244,161,0,0.3);
+  border: 1px solid rgba(74,222,128,0.3);
   border-radius: var(--radius-sm);
   font-family: var(--font-ui);
   font-size: 0.9rem;
@@ -501,7 +501,7 @@ a:hover { color: var(--gold-light); }
   transition: background 0.2s;
 }
 
-.btn-secondary:hover { background: rgba(244,161,0,0.2); }
+.btn-secondary:hover { background: rgba(74,222,128,0.2); }
 
 .btn-ghost {
   background: none;
@@ -523,6 +523,82 @@ a:hover { color: var(--gold-light); }
   display: flex;
   gap: 8px;
   margin-top: 10px;
+}
+
+/* --- Story Text --- */
+.story-text {
+  font-family: var(--font-serif);
+  font-size: 0.92rem;
+  line-height: 1.6;
+  color: var(--cream-dim);
+  font-style: italic;
+}
+
+/* --- Reflection Card --- */
+.reflection-card {
+  padding: 10px 14px;
+  border-bottom: 1px solid var(--border-soft);
+  background: linear-gradient(135deg, rgba(74,222,128,0.04), rgba(34,197,94,0.02));
+}
+
+.reflection-text {
+  font-family: var(--font-serif);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--gold-light);
+  font-style: italic;
+  text-align: center;
+}
+
+.reflection-text::before { content: '\u201c'; }
+.reflection-text::after  { content: '\u201d'; }
+
+/* --- Ask Krishna --- */
+.ask-krishna-section {
+  padding: 10px 14px 14px;
+  border-top: 1px solid var(--border-soft);
+}
+
+.ask-krishna-hint {
+  font-size: 0.78rem;
+  color: var(--muted);
+  margin-bottom: 8px;
+}
+
+.ask-krishna-input-row {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+
+.ask-krishna-input {
+  flex: 1;
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text);
+  font-family: var(--font-ui);
+  font-size: 0.88rem;
+  padding: 8px 12px;
+  outline: none;
+  transition: border-color 0.2s;
+}
+
+.ask-krishna-input:focus {
+  border-color: var(--gold);
+}
+
+.ask-krishna-input::placeholder {
+  color: var(--muted);
+}
+
+.ask-krishna-response {
+  margin-top: 10px;
+  font-family: var(--font-serif);
+  font-size: 0.92rem;
+  line-height: 1.5;
+  color: var(--cream);
+  white-space: pre-wrap;
 }
 
 /* --- Settings Drawer --- */
@@ -626,8 +702,8 @@ a:hover { color: var(--gold-light); }
   min-height: 1.2em;
 }
 
-.api-key-status.ok    { color: #7ecb7e; }
-.api-key-status.error { color: #e07070; }
+.api-key-status.ok    { color: #86efac; }
+.api-key-status.error { color: #f87171; }
 
 /* --- Responsive (larger screens) --- */
 @media (min-width: 480px) {

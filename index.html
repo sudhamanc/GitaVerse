@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
-  <meta name="theme-color" content="#1a0500">
+  <meta name="theme-color" content="#0b0f0d">
   <meta name="description" content="Daily wisdom from the Bhagavad Gita — one shloka at a time, cycling through all 700 verses.">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
@@ -86,6 +86,17 @@
           <span class="chapter-name" id="chName"></span>
         </div>
 
+        <!-- Story Mode (collapsible) -->
+        <div class="accordion hidden" id="accordionStory">
+          <button class="accordion-trigger" aria-expanded="false" aria-controls="panelStory">
+            <span>📜 Battlefield Context</span>
+            <span class="accordion-icon">+</span>
+          </button>
+          <div class="accordion-panel hidden" id="panelStory" role="region">
+            <p class="story-text" id="storyText"></p>
+          </div>
+        </div>
+
         <!-- Sanskrit -->
         <section class="sanskrit-block" aria-label="Sanskrit shloka">
           <div class="sanskrit-text" id="sanskritText" lang="sa"></div>
@@ -113,6 +124,11 @@
           <p class="translation-text" id="translationText"></p>
           <p class="translation-attribution" id="translationAttrib"></p>
         </section>
+
+        <!-- Daily Reflection -->
+        <div class="reflection-card hidden" id="reflectionCard">
+          <p class="reflection-text" id="reflectionText"></p>
+        </div>
 
         <!-- Commentary (collapsible) -->
         <div class="accordion hidden" id="accordionCommentary">
@@ -146,6 +162,21 @@
             </div>
             <div id="aiText" class="ai-text"></div>
           </div>
+        </section>
+
+        <!-- Ask Krishna -->
+        <section class="ask-krishna-section" id="askKrishnaSection">
+          <h2 class="block-label">🙏 Ask Krishna</h2>
+          <p class="ask-krishna-hint">Ask a question about life — Krishna will answer through today's verse.</p>
+          <div class="ask-krishna-input-row">
+            <input type="text" id="askKrishnaInput" class="ask-krishna-input" placeholder="What's on your mind today?" maxlength="500" autocomplete="off">
+            <button class="btn-primary btn-sm" id="askKrishnaBtn">Ask</button>
+          </div>
+          <div id="askKrishnaLoading" class="ai-loading hidden">
+            <div class="loader-om small">ॐ</div>
+            <span>Krishna contemplates…</span>
+          </div>
+          <div id="askKrishnaResponse" class="ask-krishna-response hidden"></div>
         </section>
 
       </article>
