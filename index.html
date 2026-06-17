@@ -86,18 +86,7 @@
           <span class="chapter-name" id="chName"></span>
         </div>
 
-        <!-- Story Mode (collapsible) -->
-        <div class="accordion hidden" id="accordionStory">
-          <button class="accordion-trigger" aria-expanded="false" aria-controls="panelStory">
-            <span>📜 Battlefield Context</span>
-            <span class="accordion-icon">+</span>
-          </button>
-          <div class="accordion-panel hidden" id="panelStory" role="region">
-            <p class="story-text" id="storyText"></p>
-          </div>
-        </div>
-
-        <!-- Sanskrit -->
+        <!-- Sanskrit (shared across all tabs) -->
         <section class="sanskrit-block" aria-label="Sanskrit shloka">
           <div class="sanskrit-text" id="sanskritText" lang="sa"></div>
         </section>
@@ -106,7 +95,6 @@
         <div class="audio-row" id="audioRow">
           <button class="audio-btn" id="audioBtn" aria-label="Play Sanskrit recitation">
             <span class="audio-play-icon" id="audioPlayIcon">
-              <!-- play triangle -->
               <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor"><polygon points="4,2 14,8 4,14"/></svg>
             </span>
             <span id="audioBtnLabel">Listen in Sanskrit</span>
@@ -114,69 +102,71 @@
           <audio id="audioEl" preload="none"></audio>
         </div>
 
-        <!-- Divider -->
-        <div class="ornament">✦</div>
-
-        <!-- Translation -->
-        <section class="translation-block">
-          <h2 class="block-label">Translation</h2>
-          <p class="translation-text" id="translationText"></p>
-          <p class="translation-attribution" id="translationAttrib"></p>
-        </section>
-
-        <!-- Daily Reflection -->
-        <div class="reflection-card hidden" id="reflectionCard">
-          <p class="reflection-text" id="reflectionText"></p>
+        <!-- Tab Navigation -->
+        <div class="tab-bar">
+          <button class="tab-btn active" data-tab="verse">✨ Verse</button>
+          <button class="tab-btn" data-tab="context">📜 Context</button>
+          <button class="tab-btn" data-tab="ask">🙏 Ask</button>
         </div>
 
-        <!-- Commentary (collapsible) -->
-        <div class="accordion hidden" id="accordionCommentary">
-          <button class="accordion-trigger" aria-expanded="false" aria-controls="panelCommentary">
-            <span>Commentary</span>
-            <span class="accordion-icon">+</span>
-          </button>
-          <div class="accordion-panel hidden" id="panelCommentary" role="region">
-            <p class="commentary-text" id="commentaryText"></p>
+        <!-- Tab: Verse (default) -->
+        <div class="tab-panel active" id="tabVerse" data-tab="verse">
+          <div class="ornament">✦</div>
+          <section class="translation-block">
+            <h2 class="block-label">Translation</h2>
+            <p class="translation-text" id="translationText"></p>
+            <p class="translation-attribution" id="translationAttrib"></p>
+          </section>
+          <div class="reflection-card hidden" id="reflectionCard">
+            <p class="reflection-text" id="reflectionText"></p>
           </div>
-        </div>
-
-        <!-- AI Insight (always visible) -->
-        <section class="ai-section" id="aiSection">
-          <div class="ai-header">
-            <h2 class="block-label">✨ AI Insight</h2>
-            <button class="btn-secondary btn-sm" id="aiRefresh">↺ New Insight</button>
-          </div>
-          <div id="aiSetupPrompt" class="ai-setup">
-            <p>Add your Anthropic API key in <strong>Settings</strong> to get personalized, modern insights about this shloka from Claude.</p>
-            <button class="btn-secondary btn-sm" id="aiOpenSettings">Open Settings</button>
-          </div>
-          <div id="aiInsightContent" class="hidden">
-            <div id="captchaWrap" class="captcha-wrap hidden">
-              <p class="captcha-text">Complete CAPTCHA verification to generate insight.</p>
-              <div id="turnstileWidget"></div>
+          <section class="ai-section" id="aiSection">
+            <div class="ai-header">
+              <h2 class="block-label">✨ AI Insight</h2>
+              <button class="btn-secondary btn-sm" id="aiRefresh">↺ New Insight</button>
             </div>
-            <div id="aiLoading" class="ai-loading hidden">
+            <div id="aiSetupPrompt" class="ai-setup">
+              <p>Add your Anthropic API key in <strong>Settings</strong> to get personalized insights from Claude.</p>
+              <button class="btn-secondary btn-sm" id="aiOpenSettings">Open Settings</button>
+            </div>
+            <div id="aiInsightContent" class="hidden">
+              <div id="captchaWrap" class="captcha-wrap hidden">
+                <p class="captcha-text">Complete CAPTCHA verification to generate insight.</p>
+                <div id="turnstileWidget"></div>
+              </div>
+              <div id="aiLoading" class="ai-loading hidden">
+                <div class="loader-om small">ॐ</div>
+                <span>Contemplating…</span>
+              </div>
+              <div id="aiText" class="ai-text"></div>
+            </div>
+          </section>
+        </div>
+
+        <!-- Tab: Context -->
+        <div class="tab-panel" id="tabContext" data-tab="context">
+          <section class="story-section">
+            <h2 class="block-label">📜 Battlefield Context</h2>
+            <p class="story-text" id="storyText"></p>
+          </section>
+        </div>
+
+        <!-- Tab: Ask Krishna -->
+        <div class="tab-panel" id="tabAsk" data-tab="ask">
+          <section class="ask-krishna-section">
+            <h2 class="block-label ask-krishna-label">🙏 Ask Krishna</h2>
+            <p class="ask-krishna-hint">Ask a question about life — Krishna will answer through today's verse.</p>
+            <div class="ask-krishna-input-row">
+              <input type="text" id="askKrishnaInput" class="ask-krishna-input" placeholder="What's on your mind today?" maxlength="500" autocomplete="off">
+              <button class="btn-primary btn-sm" id="askKrishnaBtn">Ask</button>
+            </div>
+            <div id="askKrishnaLoading" class="ai-loading hidden">
               <div class="loader-om small">ॐ</div>
-              <span>Contemplating…</span>
+              <span>Krishna contemplates…</span>
             </div>
-            <div id="aiText" class="ai-text"></div>
-          </div>
-        </section>
-
-        <!-- Ask Krishna -->
-        <section class="ask-krishna-section" id="askKrishnaSection">
-          <h2 class="block-label ask-krishna-label">🙏 Ask Krishna</h2>
-          <p class="ask-krishna-hint">Ask a question about life — Krishna will answer through today's verse.</p>
-          <div class="ask-krishna-input-row">
-            <input type="text" id="askKrishnaInput" class="ask-krishna-input" placeholder="What's on your mind today?" maxlength="500" autocomplete="off">
-            <button class="btn-primary btn-sm" id="askKrishnaBtn">Ask</button>
-          </div>
-          <div id="askKrishnaLoading" class="ai-loading hidden">
-            <div class="loader-om small">ॐ</div>
-            <span>Krishna contemplates…</span>
-          </div>
-          <div id="askKrishnaResponse" class="ask-krishna-response hidden"></div>
-        </section>
+            <div id="askKrishnaResponse" class="ask-krishna-response hidden"></div>
+          </section>
+        </div>
 
       </article>
     </main>

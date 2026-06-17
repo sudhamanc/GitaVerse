@@ -142,7 +142,7 @@ function getVerseForOffset(offset) {
 // ── API & Cache ────────────────────────────────────────────────
 
 const CACHE_PREFIX = 'gv_verse_';
-const CACHE_VER    = 'v2';
+const CACHE_VER    = 'v3';
 
 function cacheKey(chapter, verse) {
   return `${CACHE_PREFIX}${CACHE_VER}_${chapter}_${verse}`;
@@ -218,6 +218,7 @@ function normaliseVerseData(raw, chapter, verse) {
     { key: 'purohit', name: 'Swami Purohit'        },
     { key: 'adi',     name: 'Swami Adidevananda'   },
     { key: 'san',     name: 'Dr. Sankaranarayan'   },
+    { key: 'prabhu',  name: 'A.C. Bhaktivedanta Swami Prabhupada' },
   ];
 
   let translation  = '';
@@ -462,23 +463,8 @@ function renderVerse(verseRef, verseData) {
   document.getElementById('translationAttrib').textContent =
     verseData.attribution ? `— ${verseData.attribution}` : '';
 
-  // Commentary accordion
-  const accCommentary = document.getElementById('accordionCommentary');
-  if (verseData.commentary) {
-    document.getElementById('commentaryText').textContent = verseData.commentary;
-    accCommentary.classList.remove('hidden');
-  } else {
-    accCommentary.classList.add('hidden');
-  }
-
-  // Story accordion
-  const accStory = document.getElementById('accordionStory');
-  if (verseData.story) {
-    document.getElementById('storyText').textContent = verseData.story;
-    accStory.classList.remove('hidden');
-  } else {
-    accStory.classList.add('hidden');
-  }
+  // Story (Context tab)
+  document.getElementById('storyText').textContent = verseData.story || 'Context not available for this verse.';
 
   // Reflection card
   const reflectionCard = document.getElementById('reflectionCard');
@@ -577,6 +563,21 @@ function initAccordions() {
       const expanded = trigger.getAttribute('aria-expanded') === 'true';
       trigger.setAttribute('aria-expanded', String(!expanded));
       panel.classList.toggle('hidden', expanded);
+    });
+  });
+}
+
+// ── Tabs ───────────────────────────────────────────────────────
+
+function initTabs() {
+  const tabBtns = document.querySelectorAll('.tab-btn');
+  const tabPanels = document.querySelectorAll('.tab-panel');
+
+  tabBtns.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const target = btn.dataset.tab;
+      tabBtns.forEach(b => b.classList.toggle('active', b.dataset.tab === target));
+      tabPanels.forEach(p => p.classList.toggle('active', p.dataset.tab === target));
     });
   });
 }
@@ -930,6 +931,7 @@ function init() {
 
   // Accordions
   initAccordions();
+  initTabs();
 
   // Ask Krishna
   document.getElementById('askKrishnaBtn').addEventListener('click', askKrishna);

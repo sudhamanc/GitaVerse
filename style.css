@@ -526,12 +526,52 @@ a:hover { color: var(--gold-light); }
 }
 
 /* --- Story Text --- */
+.story-section {
+  padding: 14px;
+}
+
 .story-text {
   font-family: var(--font-serif);
   font-size: 0.92rem;
   line-height: 1.6;
   color: var(--cream-dim);
   font-style: italic;
+}
+
+/* --- Tabs --- */
+.tab-bar {
+  display: flex;
+  border-bottom: 1px solid var(--border);
+  background: var(--bg-card2);
+}
+
+.tab-btn {
+  flex: 1;
+  background: none;
+  border: none;
+  border-bottom: 2px solid transparent;
+  color: var(--muted);
+  font-family: var(--font-ui);
+  font-size: 0.8rem;
+  font-weight: 500;
+  padding: 10px 4px;
+  cursor: pointer;
+  transition: color 0.2s, border-color 0.2s;
+  text-align: center;
+}
+
+.tab-btn:hover { color: var(--cream-dim); }
+.tab-btn.active {
+  color: var(--gold);
+  border-bottom-color: var(--gold);
+}
+
+.tab-panel {
+  display: none;
+}
+
+.tab-panel.active {
+  display: block;
 }
 
 /* --- Reflection Card --- */
