@@ -142,7 +142,7 @@ function getVerseForOffset(offset) {
 // ── API & Cache ────────────────────────────────────────────────
 
 const CACHE_PREFIX = 'gv_verse_';
-const CACHE_VER    = 'v1';
+const CACHE_VER    = 'v2';
 
 function cacheKey(chapter, verse) {
   return `${CACHE_PREFIX}${CACHE_VER}_${chapter}_${verse}`;
