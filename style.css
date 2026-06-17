@@ -550,8 +550,8 @@ a:hover { color: var(--gold-light); }
   text-align: center;
 }
 
-.reflection-text::before { content: '\u201c'; }
-.reflection-text::after  { content: '\u201d'; }
+.reflection-text::before { content: '\201c'; }
+.reflection-text::after  { content: '\201d'; }
 
 /* --- Ask Krishna --- */
 .ask-krishna-section {
