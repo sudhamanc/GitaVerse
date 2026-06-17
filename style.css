@@ -415,7 +415,22 @@ a:hover { color: var(--gold-light); }
   border-bottom: none;
   padding: 8px 14px 10px;
   min-height: 0;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.ai-text {
+  font-family: var(--font-serif);
+  font-size: 0.92rem;
+  line-height: 1.45;
+  color: var(--cream);
+  white-space: pre-wrap;
+  margin-bottom: 0;
   overflow-y: auto;
+  flex: 1;
+  min-height: 0;
+  padding-right: 4px;
 }
 
 .ai-header {
@@ -458,15 +473,6 @@ a:hover { color: var(--gold-light); }
   display: flex;
   justify-content: center;
   align-items: center;
-}
-
-.ai-text {
-  font-family: var(--font-serif);
-  font-size: 0.92rem;
-  line-height: 1.45;
-  color: var(--cream);
-  white-space: pre-wrap;
-  margin-bottom: 0;
 }
 
 /* --- Navigation Bar (removed — today only) --- */
@@ -568,10 +574,14 @@ a:hover { color: var(--gold-light); }
 
 .tab-panel {
   display: none;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
 }
 
 .tab-panel.active {
-  display: block;
+  display: flex;
+  flex: 1;
 }
 
 /* --- Reflection Card --- */
@@ -597,6 +607,10 @@ a:hover { color: var(--gold-light); }
 .ask-krishna-section {
   padding: 10px 14px 14px;
   border-top: 1px solid var(--border-soft);
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
 }
 
 .ask-krishna-label {
@@ -647,8 +661,9 @@ a:hover { color: var(--gold-light); }
   line-height: 1.5;
   color: var(--cream);
   white-space: pre-wrap;
-  max-height: 250px;
   overflow-y: auto;
+  flex: 1;
+  min-height: 0;
   padding-right: 4px;
 }
 
