@@ -475,10 +475,6 @@ function renderVerse(verseRef, verseData) {
     reflectionCard.classList.add('hidden');
   }
 
-  // Day strip
-  const cycleText = `Verse ${verseRef.cyclePosition} of 700`;
-  document.getElementById('dayProgress').textContent = cycleText;
-
   // Audio
   setupAudioIfAvailable(verseData);
 
@@ -517,13 +513,12 @@ async function navigateTo(offset) {
   const verseRef = getVerseForOffset(currentOffset);
   glog('info', 'Verse: Chapter', verseRef.chapter, 'Verse', verseRef.verse, '(cycle', verseRef.cyclePosition, ')');
 
-  // Day strip
+  // Header subtitle
   let label;
   if (currentOffset === 0) label = 'Today';
   else if (currentOffset === -1) label = 'Yesterday';
   else label = `${Math.abs(currentOffset)} days ago`;
-  document.getElementById('dateDisplay').textContent = `${label} · ${formatDate(currentOffset)}`;
-  document.getElementById('dayProgress').textContent = `Verse ${verseRef.cyclePosition} of 700`;
+  document.getElementById('dateDisplay').textContent = `${label} · ${formatDate(currentOffset)} · Verse ${verseRef.cyclePosition} of 700`;
   updateNavButtons();
   updateProgressBar(verseRef.cyclePosition);
 

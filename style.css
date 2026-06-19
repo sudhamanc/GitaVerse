@@ -31,11 +31,21 @@
   --shadow:      0 4px 24px rgba(0,0,0,0.5);
 
   --header-h:    60px;
-  --strip-h:     36px;
 }
 
 /* --- Reset & Base --- */
 *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+/* --- Scrollbar (dark mode) --- */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: rgba(74,222,128,0.3); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: rgba(74,222,128,0.5); }
+* { scrollbar-width: thin; scrollbar-color: rgba(74,222,128,0.3) transparent; }
+
+[data-theme="light"] ::-webkit-scrollbar-thumb { background: rgba(34,120,60,0.3); }
+[data-theme="light"] ::-webkit-scrollbar-thumb:hover { background: rgba(34,120,60,0.5); }
+[data-theme="light"] * { scrollbar-color: rgba(34,120,60,0.3) transparent; }
 
 html {
   font-size: 16px;
@@ -119,11 +129,18 @@ a:hover { color: var(--gold-light); }
 }
 
 .logo-sub {
-  font-size: 0.7rem;
-  color: var(--gold-dim);
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  line-height: 1;
+  font-size: 0.68rem;
+  color: var(--text-dim);
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 220px;
+}
+
+@media (min-width: 400px) {
+  .logo-sub { max-width: none; }
 }
 
 .icon-btn {
@@ -139,22 +156,6 @@ a:hover { color: var(--gold-light); }
   transition: color 0.2s, background 0.2s;
 }
 .icon-btn:hover { color: var(--gold); background: rgba(74,222,128,0.08); }
-
-/* --- Day Strip --- */
-.day-strip {
-  height: var(--strip-h);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  font-size: 0.78rem;
-  color: var(--text-dim);
-  background: var(--bg-card);
-  border-bottom: 1px solid var(--border-soft);
-  letter-spacing: 0.04em;
-}
-
-.day-divider { opacity: 0.4; }
 
 .history-nav {
   display: flex;
