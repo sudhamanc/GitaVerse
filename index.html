@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <meta name="theme-color" content="#0b0f0d">
   <meta name="description" content="Daily wisdom from the Bhagavad Gita — one shloka at a time, cycling through all 700 verses.">
   <meta name="apple-mobile-web-app-capable" content="yes">
@@ -34,7 +34,7 @@
     <header class="header">
       <div class="header-inner">
         <div class="logo">
-          <span class="om" aria-hidden="true">ॐ</span>
+          <span class="om" aria-hidden="true"><svg class="icon icon-om" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 12c0-3 1.5-5 4-5s3.5 2 3.5 4c0 3-2.5 5-5.5 6"/><path d="M14 7c1.5-1 3-1.5 4-.5s1 3-1 5c-1.5 1.5-3.5 2.5-5 2.5"/><circle cx="17" cy="5" r="1"/><path d="M12 17c0 1.5-.5 3-2 4"/></svg></span>
           <div class="logo-text">
             <span class="logo-title">GitaVerse</span>
             <span class="logo-sub">Bhagavad Gita · Daily</span>
@@ -57,7 +57,17 @@
     </div>
 
     <div class="history-nav">
-      <button class="btn-secondary btn-sm" id="yesterdayBtn">← Yesterday</button>
+      <button class="nav-btn" id="prevBtn" aria-label="Previous day">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 18 9 12 15 6"/></svg>
+      </button>
+      <button class="nav-btn nav-today" id="todayBtn" aria-label="Go to today">Today</button>
+      <button class="nav-btn" id="nextBtn" aria-label="Next day">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="9 18 15 12 9 6"/></svg>
+      </button>
+    </div>
+    <div class="progress-strip">
+      <div class="progress-bar" id="progressBar"></div>
+      <span class="progress-label" id="progressLabel"></span>
     </div>
 
     <!-- Main -->
@@ -65,13 +75,13 @@
 
       <!-- Loading -->
       <div class="state-loading" id="stateLoading">
-        <div class="loader-om">ॐ</div>
+        <div class="loader-om"><svg class="icon icon-om" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 12c0-3 1.5-5 4-5s3.5 2 3.5 4c0 3-2.5 5-5.5 6"/><path d="M14 7c1.5-1 3-1.5 4-.5s1 3-1 5c-1.5 1.5-3.5 2.5-5 2.5"/><circle cx="17" cy="5" r="1"/><path d="M12 17c0 1.5-.5 3-2 4"/></svg></div>
         <p>Loading today's shloka…</p>
       </div>
 
       <!-- Error -->
       <div class="state-error hidden" id="stateError">
-        <div class="state-icon">🙏</div>
+        <div class="state-icon"><svg class="icon icon-prayer" width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v2"/><path d="M9 5c0 0-1 2-1 5s1 6 4 9"/><path d="M15 5c0 0 1 2 1 5s-1 6-4 9"/><path d="M9 5h6"/><path d="M10 12h4"/></svg></div>
         <h2>Couldn't load shloka</h2>
         <p id="errorMsg">Please check your connection and try again.</p>
         <button class="btn-primary" id="retryBtn">Try Again</button>
@@ -104,14 +114,14 @@
 
         <!-- Tab Navigation -->
         <div class="tab-bar">
-          <button class="tab-btn active" data-tab="verse">✨ Verse</button>
-          <button class="tab-btn" data-tab="context">📜 Context</button>
-          <button class="tab-btn" data-tab="ask">🙏 Ask</button>
+          <button class="tab-btn active" data-tab="verse"><svg class="icon icon-tab" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> Verse</button>
+          <button class="tab-btn" data-tab="context"><svg class="icon icon-tab" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg> Context</button>
+          <button class="tab-btn" data-tab="ask"><svg class="icon icon-tab" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v2"/><path d="M9 5c0 0-1 2-1 5s1 6 4 9"/><path d="M15 5c0 0 1 2 1 5s-1 6-4 9"/><path d="M9 5h6"/><path d="M10 12h4"/></svg> Ask</button>
         </div>
 
         <!-- Tab: Verse (default) -->
         <div class="tab-panel active" id="tabVerse" data-tab="verse">
-          <div class="ornament">✦</div>
+          <div class="ornament"><svg class="icon icon-ornament" width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2l2.4 7.2H22l-6 4.8 2.4 7.2L12 16.4l-6.4 4.8 2.4-7.2-6-4.8h7.6z"/></svg></div>
           <section class="translation-block">
             <h2 class="block-label">Translation</h2>
             <p class="translation-text" id="translationText"></p>
@@ -122,7 +132,7 @@
           </div>
           <section class="ai-section" id="aiSection">
             <div class="ai-header">
-              <h2 class="block-label">✨ AI Insight</h2>
+              <h2 class="block-label"><svg class="icon icon-tab" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"/></svg> AI Insight</h2>
               <button class="btn-secondary btn-sm" id="aiRefresh">↺ New Insight</button>
             </div>
             <div id="aiSetupPrompt" class="ai-setup">
@@ -135,7 +145,7 @@
                 <div id="turnstileWidget"></div>
               </div>
               <div id="aiLoading" class="ai-loading hidden">
-                <div class="loader-om small">ॐ</div>
+                <div class="loader-om small"><svg class="icon icon-om" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 12c0-3 1.5-5 4-5s3.5 2 3.5 4c0 3-2.5 5-5.5 6"/><path d="M14 7c1.5-1 3-1.5 4-.5s1 3-1 5c-1.5 1.5-3.5 2.5-5 2.5"/><circle cx="17" cy="5" r="1"/><path d="M12 17c0 1.5-.5 3-2 4"/></svg></div>
                 <span>Contemplating…</span>
               </div>
               <div id="aiText" class="ai-text"></div>
@@ -146,7 +156,7 @@
         <!-- Tab: Context -->
         <div class="tab-panel" id="tabContext" data-tab="context">
           <section class="story-section">
-            <h2 class="block-label">📜 Battlefield Context</h2>
+            <h2 class="block-label"><svg class="icon icon-tab" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg> Battlefield Context</h2>
             <p class="story-text" id="storyText"></p>
           </section>
         </div>
@@ -154,14 +164,14 @@
         <!-- Tab: Ask Krishna -->
         <div class="tab-panel" id="tabAsk" data-tab="ask">
           <section class="ask-krishna-section">
-            <h2 class="block-label ask-krishna-label">🙏 Ask Krishna</h2>
+            <h2 class="block-label ask-krishna-label"><svg class="icon icon-tab" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2v2"/><path d="M9 5c0 0-1 2-1 5s1 6 4 9"/><path d="M15 5c0 0 1 2 1 5s-1 6-4 9"/><path d="M9 5h6"/><path d="M10 12h4"/></svg> Ask Krishna</h2>
             <p class="ask-krishna-hint">Ask a question about life — Krishna will answer through today's verse.</p>
             <div class="ask-krishna-input-row">
               <input type="text" id="askKrishnaInput" class="ask-krishna-input" placeholder="What's on your mind today?" maxlength="500" autocomplete="off">
               <button class="btn-primary btn-sm" id="askKrishnaBtn">Ask</button>
             </div>
             <div id="askKrishnaLoading" class="ai-loading hidden">
-              <div class="loader-om small">ॐ</div>
+              <div class="loader-om small"><svg class="icon icon-om" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M6 12c0-3 1.5-5 4-5s3.5 2 3.5 4c0 3-2.5 5-5.5 6"/><path d="M14 7c1.5-1 3-1.5 4-.5s1 3-1 5c-1.5 1.5-3.5 2.5-5 2.5"/><circle cx="17" cy="5" r="1"/><path d="M12 17c0 1.5-.5 3-2 4"/></svg></div>
               <span>Krishna contemplates…</span>
             </div>
             <div id="askKrishnaResponse" class="ask-krishna-response hidden"></div>
@@ -187,38 +197,17 @@
     <div class="drawer-body">
 
       <div class="setting-group">
-        <label class="setting-label" for="apiKeyInput">Anthropic API Key</label>
-        <p class="setting-desc">
-          Powers the ✨ AI Insight feature — Claude gives you a personalized,
-          conversational take on each shloka. Your key is stored locally on this device only.
-        </p>
-        <input type="password" id="apiKeyInput" class="text-input" placeholder="sk-ant-api03-…" autocomplete="off" spellcheck="false">
-        <div class="btn-row">
-          <button class="btn-primary btn-sm" id="saveApiKey">Save Key</button>
-          <button class="btn-ghost btn-sm" id="clearApiKey">Clear</button>
+        <label class="setting-label">Appearance</label>
+        <div class="theme-toggle" id="themeToggle">
+          <button class="theme-option" data-theme="light">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="5"/><line x1="12" y1="1" x2="12" y2="3"/><line x1="12" y1="21" x2="12" y2="23"/><line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/><line x1="1" y1="12" x2="3" y2="12"/><line x1="21" y1="12" x2="23" y2="12"/><line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/></svg>
+            Light
+          </button>
+          <button class="theme-option" data-theme="dark">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/></svg>
+            Dark
+          </button>
         </div>
-        <p class="api-key-status" id="apiKeyStatus"></p>
-      </div>
-
-      <div class="setting-group">
-        <label class="setting-label">About GitaVerse</label>
-        <p class="setting-desc">
-          Shows one shloka per day from all 700 verses of the Bhagavad Gita in a
-          deterministic sequence — no repeats for 700 days (~2 years), then it cycles.
-          The order is the same for everyone, no account or database needed.
-        </p>
-        <p class="setting-desc">
-          <strong>Data:</strong> Translations by Swami Sivananda via the
-          <a href="https://vedicscriptures.github.io" target="_blank" rel="noopener" class="link">Vedic Scriptures API</a>.
-          Sanskrit audio from <a href="https://gita-audio.jkyog.org" target="_blank" rel="noopener" class="link">gita-audio.jkyog.org</a>.
-        </p>
-      </div>
-
-      <div class="setting-group">
-        <label class="setting-label">Cache</label>
-        <p class="setting-desc">Loaded shlokas are cached locally for offline use.</p>
-        <button class="btn-ghost btn-sm" id="clearCache">Clear Cache</button>
-        <span class="setting-desc" id="cacheInfo"></span>
       </div>
 
     </div>

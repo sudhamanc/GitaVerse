@@ -492,23 +492,40 @@ function renderVerse(verseRef, verseData) {
 
 let currentOffset = 0;
 
-function updateHistoryButton() {
-  const btn = document.getElementById('yesterdayBtn');
-  if (!btn) return;
-  btn.textContent = currentOffset === 0 ? '← Yesterday' : '↺ Back to Today';
+function updateNavButtons() {
+  const todayBtn = document.getElementById('todayBtn');
+  const nextBtn = document.getElementById('nextBtn');
+  if (!todayBtn || !nextBtn) return;
+  // Highlight "Today" when not viewing today
+  todayBtn.classList.toggle('active', currentOffset !== 0);
+  // Disable "Next" when already on today
+  nextBtn.disabled = currentOffset >= 0;
+}
+
+function updateProgressBar(cyclePosition) {
+  const bar = document.getElementById('progressBar');
+  const label = document.getElementById('progressLabel');
+  if (!bar || !label) return;
+  const pct = (cyclePosition / 700) * 100;
+  bar.style.width = `${pct}%`;
+  label.textContent = `Day ${cyclePosition} of 700`;
 }
 
 async function navigateTo(offset) {
   glog('info', 'navigateTo called, offset:', offset);
-  currentOffset = offset === -1 ? -1 : 0;
+  currentOffset = offset;
   const verseRef = getVerseForOffset(currentOffset);
-  glog('info', 'Today\'s verse: Chapter', verseRef.chapter, 'Verse', verseRef.verse, '(cycle', verseRef.cyclePosition, ')');
+  glog('info', 'Verse: Chapter', verseRef.chapter, 'Verse', verseRef.verse, '(cycle', verseRef.cyclePosition, ')');
 
   // Day strip
-  const label = currentOffset === 0 ? 'Today' : 'Yesterday';
+  let label;
+  if (currentOffset === 0) label = 'Today';
+  else if (currentOffset === -1) label = 'Yesterday';
+  else label = `${Math.abs(currentOffset)} days ago`;
   document.getElementById('dateDisplay').textContent = `${label} · ${formatDate(currentOffset)}`;
   document.getElementById('dayProgress').textContent = `Verse ${verseRef.cyclePosition} of 700`;
-  updateHistoryButton();
+  updateNavButtons();
+  updateProgressBar(verseRef.cyclePosition);
 
   // Reset accordions
   resetAccordions();
@@ -698,12 +715,8 @@ async function detectAiMode() {
   }
 }
 
-function getApiKey() {
-  return localStorage.getItem('gv_anthropic_key') || '';
-}
-
 function refreshAiSection(verseData) {
-  const hasKey = HAS_SERVER_KEY || !!getApiKey();
+  const hasKey = HAS_SERVER_KEY;
   document.getElementById('aiSetupPrompt').classList.toggle('hidden', hasKey);
   document.getElementById('aiInsightContent').classList.toggle('hidden', !hasKey);
   if (!CAPTCHA_REQUIRED || TURNSTILE_TOKEN) {
@@ -729,16 +742,16 @@ async function fetchAiInsight(verseData) {
   refreshBtn.disabled = true;
 
   try {
-    // Build headers — include user's key if no server-side key
+    // Build headers
     const headers = {
       'content-type': 'application/json',
       'x-client-fingerprint': getClientFingerprint()
     };
     if (!HAS_SERVER_KEY) {
-      const key = getApiKey();
-      if (!key) { textEl.textContent = 'Add your Anthropic API key in Settings.'; return; }
-      headers['x-api-key'] = key;
-    } else if (CAPTCHA_REQUIRED) {
+      textEl.textContent = 'AI Insights require a server-side API key.';
+      return;
+    }
+    if (CAPTCHA_REQUIRED) {
       const ok = await ensureCaptchaToken();
       if (!ok) {
         textEl.textContent = 'Complete CAPTCHA verification to continue.';
@@ -785,23 +798,39 @@ async function fetchAiInsight(verseData) {
 
 // ── Settings ──────────────────────────────────────────────────
 
+function getTheme() {
+  return localStorage.getItem('gv_theme') || 'system';
+}
+
+function applyTheme(theme) {
+  const resolved = theme === 'system'
+    ? (window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark')
+    : theme;
+  document.documentElement.setAttribute('data-theme', resolved);
+  // Update meta theme-color
+  const meta = document.querySelector('meta[name="theme-color"]');
+  if (meta) meta.content = resolved === 'light' ? '#f5f7f5' : '#0b0f0d';
+}
+
+function setTheme(theme) {
+  localStorage.setItem('gv_theme', theme);
+  applyTheme(theme);
+  updateThemeButtons();
+}
+
+function updateThemeButtons() {
+  const current = getTheme();
+  document.querySelectorAll('.theme-option').forEach(btn => {
+    btn.classList.toggle('active', btn.dataset.theme === current);
+  });
+}
+
 function openSettings() {
   document.getElementById('drawerOverlay').classList.remove('hidden');
   document.getElementById('settingsDrawer').classList.remove('hidden');
   document.getElementById('drawerOverlay').removeAttribute('aria-hidden');
   document.getElementById('settingsDrawer').removeAttribute('aria-hidden');
-
-  // Hide the API key section if the server already has a key configured
-  const keyGroup = document.getElementById('apiKeyInput').closest('.setting-group');
-  if (keyGroup) keyGroup.style.display = HAS_SERVER_KEY ? 'none' : '';
-
-  // Populate API key field (masked)
-  const key = getApiKey();
-  document.getElementById('apiKeyInput').value = key ? key : '';
-
-  // Cache info
-  const count = Object.keys(localStorage).filter(k => k.startsWith(CACHE_PREFIX)).length;
-  document.getElementById('cacheInfo').textContent = ` (${count} verses cached)`;
+  updateThemeButtons();
 }
 
 function closeSettings() {
@@ -809,45 +838,6 @@ function closeSettings() {
   document.getElementById('settingsDrawer').classList.add('hidden');
   document.getElementById('drawerOverlay').setAttribute('aria-hidden', 'true');
   document.getElementById('settingsDrawer').setAttribute('aria-hidden', 'true');
-}
-
-function saveApiKey() {
-  const key    = document.getElementById('apiKeyInput').value.trim();
-  const status = document.getElementById('apiKeyStatus');
-
-  if (!key) {
-    status.textContent = 'Please enter a key.';
-    status.className   = 'api-key-status error';
-    return;
-  }
-  if (!key.startsWith('sk-ant-')) {
-    status.textContent = 'Key should start with sk-ant-…';
-    status.className   = 'api-key-status error';
-    return;
-  }
-
-  localStorage.setItem('gv_anthropic_key', key);
-  status.textContent = '✓ Saved — AI Insights are now enabled.';
-  status.className   = 'api-key-status ok';
-
-  // Refresh the AI panel on the current card
-  const verseRef = getVerseForOffset(currentOffset);
-  const cached   = loadFromCache(verseRef.chapter, verseRef.verse);
-  if (cached) refreshAiSection(cached);
-}
-
-function clearApiKey() {
-  localStorage.removeItem('gv_anthropic_key');
-  document.getElementById('apiKeyInput').value = '';
-  const status = document.getElementById('apiKeyStatus');
-  status.textContent = 'Key cleared.';
-  status.className   = 'api-key-status';
-}
-
-function clearCache() {
-  const keys = Object.keys(localStorage).filter(k => k.startsWith(CACHE_PREFIX));
-  keys.forEach(k => localStorage.removeItem(k));
-  document.getElementById('cacheInfo').textContent = ` (cache cleared)`;
 }
 
 // ── Ask Krishna ────────────────────────────────────────────────
@@ -873,9 +863,7 @@ async function askKrishna() {
   loading.classList.remove('hidden');
   response.classList.add('hidden');
 
-  const apiKey = localStorage.getItem('gv_anthropic_key') || '';
   const headers = { 'Content-Type': 'application/json' };
-  if (apiKey) headers['x-api-key'] = apiKey;
   headers['x-client-fingerprint'] = getClientFingerprint();
 
   try {
@@ -914,6 +902,9 @@ async function askKrishna() {
 function init() {
   glog('info', '=== GitaVerse init ===');
 
+  // Apply saved theme immediately
+  applyTheme(getTheme());
+
   // Retry button (in error state)
   document.getElementById('retryBtn').addEventListener('click', () => navigateTo(currentOffset));
 
@@ -921,13 +912,31 @@ function init() {
   document.getElementById('settingsBtn').addEventListener('click', openSettings);
   document.getElementById('closeSettings').addEventListener('click', closeSettings);
   document.getElementById('drawerOverlay').addEventListener('click', closeSettings);
-  document.getElementById('saveApiKey').addEventListener('click', saveApiKey);
-  document.getElementById('clearApiKey').addEventListener('click', clearApiKey);
-  document.getElementById('clearCache').addEventListener('click', clearCache);
-  document.getElementById('aiOpenSettings').addEventListener('click', openSettings);
-  document.getElementById('yesterdayBtn').addEventListener('click', () => {
-    navigateTo(currentOffset === 0 ? -1 : 0);
+
+  // Theme toggle
+  document.querySelectorAll('.theme-option').forEach(btn => {
+    btn.addEventListener('click', () => setTheme(btn.dataset.theme));
   });
+
+  // Listen for system theme changes
+  window.matchMedia('(prefers-color-scheme: light)').addEventListener('change', () => {
+    if (getTheme() === 'system') applyTheme('system');
+  });
+
+  // Navigation
+  document.getElementById('prevBtn').addEventListener('click', () => {
+    navigateTo(currentOffset - 1);
+  });
+  document.getElementById('todayBtn').addEventListener('click', () => {
+    navigateTo(0);
+  });
+  document.getElementById('nextBtn').addEventListener('click', () => {
+    if (currentOffset < 0) navigateTo(currentOffset + 1);
+  });
+
+  // AI setup fallback link
+  const aiSettingsLink = document.getElementById('aiOpenSettings');
+  if (aiSettingsLink) aiSettingsLink.addEventListener('click', openSettings);
 
   // Accordions
   initAccordions();
